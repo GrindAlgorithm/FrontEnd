@@ -1,6 +1,14 @@
-import type { ApiErrorBody } from '../types/domain'
+import type { ApiEnvelope, ApiErrorBody } from '../types/domain'
 
 const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+
+/** 백엔드 ResultCodeEnum.SUCCESS — 이 외의 resultCode는 전부 실패 */
+const RESULT_CODE_SUCCESS = '0000'
+
+/** 백엔드 공통 봉투(util/ResponseResult.java) 여부 판별 */
+function isEnvelope(data: unknown): data is ApiEnvelope<unknown> {
+  return typeof data === 'object' && data !== null && 'resultCode' in data && 'result' in data
+}
 
 export class ApiError extends Error {
   constructor(
@@ -33,7 +41,16 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     throw new ApiError(res.status, code, message)
   }
   if (res.status === 204) return undefined as T
-  return (await res.json()) as T
+  const data: unknown = await res.json()
+  // 백엔드는 성공/실패 모두 HTTP 200 + ResponseResult 봉투로 내려준다.
+  // resultCode '0000'이면 result만 벗겨서 반환, 그 외('9999' 등)는 실패로 던진다.
+  if (isEnvelope(data)) {
+    if (data.resultCode !== RESULT_CODE_SUCCESS) {
+      throw new ApiError(res.status, data.resultCode, `요청 실패 (resultCode ${data.resultCode})`)
+    }
+    return data.result as T
+  }
+  return data as T
 }
 
 export const http = {

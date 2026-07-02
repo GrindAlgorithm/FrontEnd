@@ -22,7 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setMe(await api.getMe())
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
+      // 401 = 계약(§1.4), 403 = 백엔드 Spring Security 기본 설정(미인증 시 Http403ForbiddenEntryPoint)
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         setMe(null)
       } else {
         throw err

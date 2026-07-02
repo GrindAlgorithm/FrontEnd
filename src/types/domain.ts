@@ -357,7 +357,18 @@ export type DiscussionResponse =
   | { accessible: false; stats: DiscussionStats }
   | { accessible: true; firstSolvedAt: string; stats: DiscussionStats; posts: DiscussionPost[] }
 
-// ── 에러 봉투 ────────────────────────────────────────────────
+// ── 공통 응답/에러 봉투 ──────────────────────────────────────
+
+/**
+ * 백엔드 공통 응답 봉투 — util/ResponseResult.java.
+ * 성공/실패 모두 HTTP 200으로 내려오고 resultCode로 구분한다.
+ * http.ts가 벗겨서 result만 반환하므로 화면 코드는 이 타입을 볼 일 없다.
+ */
+export interface ApiEnvelope<T> {
+  resultCode: string // '0000' 성공, '9999' 실패 (ResultCodeEnum)
+  result: T
+  response?: unknown // ResponseEntity 직렬화 부산물 — 프론트 미사용
+}
 
 export interface ApiErrorBody {
   error: {
