@@ -377,7 +377,7 @@ export function HomePage() {
             </Link>
           </span>
         </div>
-        <JandiGrid weeks={toJandiWeeks(d.seasonActivity.days)} style={{ maxWidth: 360 }} />
+        <JandiGrid weeks={toJandiWeeks(d.seasonActivity.days)} />
       </section>
     </div>
   )

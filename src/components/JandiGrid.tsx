@@ -11,12 +11,14 @@ export function JandiGrid({
   style?: CSSProperties
   legend?: boolean
 }) {
+  if (weeks.length === 0) return null
   const width = weeks.length * 14 - 3
   return (
     <div>
       <svg
         viewBox={`0 0 ${width} 95`}
-        style={{ width: '100%', height: 'auto', display: 'block', ...style }}
+        // maxWidth: 시즌 초반처럼 주 수가 적을 때 100% 폭으로 늘어나 셀이 거대해지지 않도록 셀 크기를 최대 ~24px로 제한
+        style={{ width: '100%', maxWidth: weeks.length * 24, height: 'auto', display: 'block', ...style }}
       >
         {weeks.map((week, wi) => (
           <g key={wi}>
