@@ -11,6 +11,7 @@ import type {
   RunResult,
   SeasonDetailResponse,
   SeasonSummary,
+  SolveEventBatch,
   SubmissionSummary,
   SubmitRequest,
   SubmitResponse,
@@ -43,6 +44,10 @@ export interface ApiClient {
   submit(req: SubmitRequest): Promise<SubmitResponse>
   getSubmission(submissionId: number): Promise<SubmissionSummary>
   listSubmissions(params?: { problemId?: string; mine?: boolean }): Promise<SubmissionSummary[]>
+
+  // ── 부정행위 신호 배치 (A3) ──
+  /** 실패해도 화면 흐름에 영향을 주지 않는다 — 호출부가 조용히 재시도만 한다 */
+  reportSolveEvents(batch: SolveEventBatch): Promise<void>
 
   // ── 랭킹 ──
   getRanking(scope: RankingScope): Promise<RankingResponse>

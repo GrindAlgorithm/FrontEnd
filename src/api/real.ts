@@ -29,6 +29,9 @@ export const realApi: ApiClient = {
     return http.get(`/submissions${qs ? `?${qs}` : ''}`)
   },
 
+  reportSolveEvents: batch =>
+    http.post(`/solve-sessions/${encodeURIComponent(batch.solveSessionId)}/events`, batch),
+
   getRanking: scope => http.get(`/rankings?scope=${scope}`),
 
   getUserProfile: handle => http.get(`/users/${encodeURIComponent(handle)}`),

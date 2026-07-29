@@ -233,6 +233,67 @@ export interface SubmissionSummary {
   submittedAt: string
 }
 
+// ── 부정행위 신호 (A3) ──────────────────────────────────────
+//
+// IDE에서 코드를 쓰는 동안 클라이언트가 수집하는 신호.
+// POST /solve-sessions/{solveSessionId}/events 로 배치 전송한다 (연동 문서 §2.17).
+// ⚠ 클라이언트 신호는 원리상 전부 우회 가능하다 — '증거'가 아니라 '참고 지표'이고
+//   실제 판정(제재)은 서버가 코드 유사도·풀이시간 이상치와 함께 내려야 한다.
+
+export type SolveEventType =
+  | 'paste_blocked' // 외부 클립보드 붙여넣기 차단
+  | 'internal_paste' // IDE 안에서 복사한 코드의 재붙여넣기 — 허용된 경로(기록만, 위험도 0)
+  | 'drop_blocked' // 에디터 드래그&드롭 삽입 차단
+  | 'bulk_insert' // 키 입력 없이 대량 텍스트가 나타남 (붙여넣기 우회 의심)
+  | 'return_bulk_insert' // 창 복귀 직후 대량 삽입 (외부 참조 의심 — 복합 신호)
+  | 'typing_speed' // 사람의 한계를 넘는 입력 속도
+  | 'typing_rhythm' // 기계적으로 균일한 키 간격 (매크로 의심)
+  | 'focus_lost' // 창/탭 이탈 (복귀 시 지속시간과 함께 발행)
+  | 'devtools_suspected' // 개발자 도구 열림 의심
+  | 'code_copied' // 에디터 코드 복사/잘라내기 (유출 방향)
+
+export type SolveEventSeverity = 'info' | 'warn' | 'critical'
+
+export interface SolveEventDetail {
+  chars?: number // 삽입·차단·복사된 문자 수 (내용은 보내지 않는다)
+  durationMs?: number // 이탈 지속 시간
+  cps?: number // 초당 입력 문자 수
+  cv?: number // 키 간격 변동계수 — 낮을수록 기계적
+  line?: number // 발생 지점 줄 번호
+}
+
+export interface SolveEvent {
+  type: SolveEventType
+  severity: SolveEventSeverity
+  at: string // ISO 8601 (클라이언트 시계 — 서버 수신 시각과 대조 권장)
+  message: string // 화면·로그 표시용 한국어 요약
+  detail?: SolveEventDetail
+}
+
+export type IntegrityLevel = 'clean' | 'caution' | 'risk'
+
+/** 세션 누적 요약 — 이벤트 배치마다 최신값을 함께 보낸다 */
+export interface SolveIntegritySummary {
+  riskScore: number // 0~100 (클라이언트 추정치)
+  level: IntegrityLevel
+  typedChars: number // 키보드로 입력된 누적 문자 수
+  insertedChars: number // 키 입력 없이 나타난 누적 문자 수
+  internalPasteChars: number // IDE 내부 복사분 재붙여넣기 — 자필률 계산에서 제외된 양
+  finalCodeChars: number // 현재 코드 길이
+  authorshipRatio: number // typed / (typed + inserted), 0~1 — 낮을수록 '직접 안 친' 코드
+  activeMs: number // 창을 보고 있던 시간
+  blurredMs: number // 창 이탈 누적 시간
+  blurCount: number
+  eventCounts: Partial<Record<SolveEventType, number>>
+}
+
+export interface SolveEventBatch {
+  solveSessionId: string
+  problemId: string
+  events: SolveEvent[]
+  summary: SolveIntegritySummary
+}
+
 // ── 랭킹 ─────────────────────────────────────────────────────
 
 export type RankingScope = 'season' | 'overall' | 'friends'

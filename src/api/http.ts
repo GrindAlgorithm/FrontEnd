@@ -2,6 +2,9 @@ import type { ApiEnvelope, ApiErrorBody } from '../types/domain'
 
 const BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
+/** 페이지 이탈 시 beacon 전송 등 fetch 밖에서 절대 경로가 필요할 때 */
+export const API_BASE = BASE
+
 /** 백엔드 ResultCodeEnum.SUCCESS — 이 외의 resultCode는 전부 실패 */
 const RESULT_CODE_SUCCESS = '0000'
 
@@ -58,4 +61,19 @@ export const http = {
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   delete: <T>(path: string) => request<T>('DELETE', path),
+}
+
+/**
+ * 페이지 이탈(pagehide) 시점의 단방향 전송.
+ * 이때 띄운 fetch는 브라우저가 취소하므로 sendBeacon을 쓴다 — 응답은 받을 수 없다.
+ * 세션 쿠키는 same-origin이라 자동 첨부되고, Content-Type은 Blob 타입으로만 지정 가능.
+ */
+export function postBeacon(path: string, body: unknown): boolean {
+  if (typeof navigator === 'undefined' || typeof navigator.sendBeacon !== 'function') return false
+  try {
+    const blob = new Blob([JSON.stringify(body)], { type: 'application/json' })
+    return navigator.sendBeacon(BASE + path, blob)
+  } catch {
+    return false
+  }
 }

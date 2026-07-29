@@ -4,6 +4,7 @@ import type {
   DiscussionResponse,
   MeResponse,
   ProblemDetail,
+  SolveEventBatch,
   SubmissionSummary,
   UserProfileResponse,
 } from '../../types/domain'
@@ -56,6 +57,8 @@ interface PendingSubmission {
 const pending = new Map<number, PendingSubmission>()
 let nextSubmissionId = 87123420
 const createdSubmissions: SubmissionSummary[] = []
+/** 부정행위 신호 배치 수신함 — 목에서는 콘솔 확인용으로만 쌓아둔다 */
+const receivedSolveEvents: SolveEventBatch[] = []
 
 function requireAuth(): void {
   if (!loggedIn) throw new ApiError(401, 'UNAUTHORIZED', '로그인이 필요합니다')
@@ -262,6 +265,18 @@ export const mockApi: ApiClient = {
     if (params?.problemId) rows = rows.filter(s => s.problem.problemId === params.problemId)
     if (params?.mine) rows = rows.filter(s => s.user.handle === me.handle)
     return rows.map(s => ({ ...s }))
+  },
+
+  // ── 부정행위 신호 (A3) ──
+  async reportSolveEvents(batch) {
+    await delay(80)
+    receivedSolveEvents.push(batch)
+    // 목 모드에서는 저장할 곳이 없으니 콘솔로 확인한다 (개발용 — 실서버 전환 시 사라짐)
+    // eslint-disable-next-line no-console
+    console.info(
+      `[antiCheat] ${batch.solveSessionId} · risk ${batch.summary.riskScore}(${batch.summary.level}) · 자필률 ${(batch.summary.authorshipRatio * 100).toFixed(0)}% · 신규 ${batch.events.length}건`,
+      batch.events,
+    )
   },
 
   // ── 랭킹 ──

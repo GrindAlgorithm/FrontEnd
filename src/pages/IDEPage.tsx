@@ -6,6 +6,7 @@ import { C, fontStack, monoStack, submissionStatusText } from '../theme'
 import { Tier } from '../components/Tier'
 import { CodeEditor } from '../components/CodeEditor'
 import { LoadingView, ErrorView } from '../components/Feedback'
+import { IntegrityIndicator, useAntiCheat } from '../antiCheat'
 import { LANGUAGES, STARTER_CODE, isStarterCode } from '../constants/languages'
 import type { LanguageCode, SubmissionStatus } from '../types/domain'
 
@@ -15,6 +16,13 @@ export function IDEPage() {
   const { problemId } = useParams<{ problemId: string }>()
   // 본문 열람 = 풀이 시작 시각 기록 (B2). 열람 시점이 서버에 남는다.
   const open = useApi(() => api.openProblem(problemId!), [problemId])
+  // 부정행위 신호 수집 (A3) — 훅 순서를 지키려고 본문 로딩 전에도 호출한다.
+  // solveSessionId가 채워지기 전까지는 수집만 하고 전송하지 않는다.
+  const antiCheat = useAntiCheat({
+    solveSessionId: open.data?.solveSessionId ?? null,
+    problemId: problemId!,
+    initialCode: STARTER_CODE.java11,
+  })
 
   const [lang, setLang] = useState<LanguageCode>('java11')
   const [code, setCode] = useState(STARTER_CODE.java11)
@@ -36,7 +44,16 @@ export function IDEPage() {
 
   const handleLang = (next: LanguageCode) => {
     setLang(next)
-    if (isStarterCode(code)) setCode(STARTER_CODE[next])
+    // 스타터 코드 교체는 유저 입력이 아니므로 탐지 기준선을 같이 옮긴다 (대량 삽입 오탐 방지)
+    if (isStarterCode(code)) {
+      setCode(STARTER_CODE[next])
+      antiCheat.resetBaseline(STARTER_CODE[next])
+    }
+  }
+
+  const handleReset = () => {
+    setCode(STARTER_CODE[lang])
+    antiCheat.resetBaseline(STARTER_CODE[lang])
   }
 
   const handlePasteBlocked = () => {
@@ -81,6 +98,8 @@ export function IDEPage() {
     setSubmitting(true)
     setVerdict(null)
     setOutput('제출 중...')
+    // 제출 시점의 무결성 기록을 서버가 먼저 갖도록 남은 신호를 밀어낸다 (실패해도 제출은 진행)
+    await antiCheat.flush()
     try {
       const { submissionId } = await api.submit({
         problemId: problem.problemId,
@@ -284,7 +303,7 @@ export function IDEPage() {
             ))}
           </select>
           <button
-            onClick={() => setCode(STARTER_CODE[lang])}
+            onClick={handleReset}
             style={{
               background: 'transparent',
               border: 'none',
@@ -300,10 +319,20 @@ export function IDEPage() {
           </button>
           {pasteWarned && (
             <span style={{ fontSize: 11, color: C.red, fontWeight: 600 }}>
-              ⚠ 부정행위 방지 정책에 따라 붙여넣기가 제한됩니다
+              ⚠ 외부에서 복사한 코드는 붙여넣을 수 없습니다 (이 에디터에서 복사한 코드는 가능)
             </span>
           )}
           <div style={{ flex: 1 }} />
+          {antiCheat.summary.level === 'risk' && (
+            <span style={{ fontSize: 11, color: C.red, fontWeight: 600 }}>
+              ⚠ 이 제출은 검토 대상으로 표시됩니다
+            </span>
+          )}
+          <IntegrityIndicator
+            summary={antiCheat.summary}
+            events={antiCheat.events}
+            onOpen={antiCheat.refresh}
+          />
           <button
             onClick={handleRun}
             disabled={running || submitting}
@@ -339,7 +368,13 @@ export function IDEPage() {
         </div>
 
         {/* Editor */}
-        <CodeEditor code={code} onChange={setCode} lang={lang} onPasteBlocked={handlePasteBlocked} />
+        <CodeEditor
+          code={code}
+          onChange={setCode}
+          lang={lang}
+          onPasteBlocked={handlePasteBlocked}
+          monitor={antiCheat.monitor}
+        />
 
         {/* IO panel */}
         <div
