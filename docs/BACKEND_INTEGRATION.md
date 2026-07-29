@@ -32,7 +32,7 @@
 | 2 | 문제 목록 `/problems` | `GET /seasons`, `GET /seasons/{id}/problems` |
 | 2-b | 채점 현황(내부 탭) `/problems?tab=submissions` | `GET /submissions` |
 | 3 | 문제 상세 `/problems/{problemId}` | `GET /problems/{problemId}`, (내 제출 탭) `GET /submissions?problemId=&mine=true` |
-| 4 | IDE `/problems/{problemId}/solve` | `POST /problems/{problemId}/open`, `POST /runs`, `POST /submissions`, `GET /submissions/{id}` |
+| 4 | IDE `/problems/{problemId}/solve` | `POST /problems/{problemId}/open`, `POST /runs`, `POST /submissions`, `GET /submissions/{id}`, `POST /solve-sessions/{id}/events` |
 | 5 | 문제 토론 `/problems/{problemId}/discussion` | `GET /problems/{problemId}/discussions` |
 | 6 | 랭킹 `/ranking` | `GET /rankings?scope=` |
 | 7 | 시즌 `/season` | `GET /seasons/current` |
@@ -310,9 +310,9 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 - `solveSessionId` — 이후 `POST /runs`/`POST /submissions`에 동봉되어 "어느 열람 세션에서 나온 제출인지" 연결
 - 같은 유저가 재진입하면: 새 세션 발급 + 기존 기록 유지 권장 (최초 열람 시각이 분석 기준)
 - 본문 포맷: MVP는 **plain text** (프론트가 문단 그대로 렌더). 마크다운/이미지 필요해지면 협의
-- ⚠ 부정행위 탐지 로직(A3: IP·기기·캠 감독·마우스/키보드 이벤트·복붙 금지 등)은 **운영 기준 미확정**.
-  프론트는 현재 **에디터 붙여넣기 차단**만 구현돼 있음. 이벤트 수집 엔드포인트가 정해지면
-  (제안: `POST /solve-sessions/{id}/events` 배치) 프론트에 송신 로직 추가 — §5 참고
+- 이 `solveSessionId`가 부정행위 신호(§2.17)의 조인 키다 — 열람 시각 + 신호 + 제출을 한 세션으로 묶는다
+- ⚠ 부정행위 탐지의 **운영 기준(어느 점수부터 어떤 조치)은 여전히 미확정**. 프론트는 신호 수집·전송까지만
+  하고 판정/제재는 하지 않는다 — §2.17, §5 참고
 
 ### 2.9 `POST /runs` — 코드 실행 (제출 아님, 예제 테스트용)
 
@@ -480,6 +480,78 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 **204**
 **400** — 미보유 칭호 지정 시
 
+### 2.17 `POST /solve-sessions/{solveSessionId}/events` — 부정행위 신호 배치 (★ A3)
+
+IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 올린다.
+프론트 구현: `src/antiCheat/` (탐지 엔진 `detector.ts` + 훅 `useAntiCheat.ts`).
+
+**전송 시점** — 15초 주기(신규 이벤트가 있을 때만) / **제출 직전** / IDE 이탈 / 페이지
+언로드(`navigator.sendBeacon`). 실패하면 프론트가 큐에 되돌려 다음 주기에 재시도한다.
+
+**요청**
+```json
+{
+  "solveSessionId": "sess-S2-08-1750000000000",
+  "problemId": "S2-08",
+  "events": [
+    {
+      "type": "bulk_insert",
+      "severity": "critical",
+      "at": "2026-07-29T12:03:11.482+09:00",
+      "message": "14번째 줄에 312자가 한 번에 삽입됨",
+      "detail": { "chars": 312, "line": 14 }
+    }
+  ],
+  "summary": {
+    "riskScore": 50, "level": "risk",
+    "typedChars": 128, "insertedChars": 312, "internalPasteChars": 0, "finalCodeChars": 440,
+    "authorshipRatio": 0.291,
+    "activeMs": 254000, "blurredMs": 41000, "blurCount": 2,
+    "eventCounts": { "bulk_insert": 1, "focus_lost": 2 }
+  }
+}
+```
+**204** — 본문 불필요. 프론트는 응답을 쓰지 않는다(sendBeacon 경로는 응답을 받을 수도 없음).
+
+**이벤트 종류**
+
+| `type` | 의미 | `detail` |
+|---|---|---|
+| `paste_blocked` | **외부** 클립보드 붙여넣기 차단 | `chars` |
+| `internal_paste` | 이 에디터에서 복사한 코드의 재붙여넣기 — **허용**, 위험도 0 (기록만) | `chars` |
+| `drop_blocked` | 드래그&드롭 삽입 차단 | `chars` |
+| `bulk_insert` | **키 입력 없이 대량 텍스트가 나타남** — 차단을 우회해 들어온 코드 | `chars`, `line` |
+| `return_bulk_insert` | 창 복귀 직후의 대량 삽입 (외부 참조 의심 — 복합 신호) | `chars`, `line` |
+| `typing_speed` | 사람의 한계를 넘는 입력 속도(>18cps) | `cps` |
+| `typing_rhythm` | 키 간격이 기계적으로 균일(변동계수<0.12) — 매크로 의심 | `cv` |
+| `focus_lost` | 창/탭 이탈 (1.5초 미만은 기록 안 함) | `durationMs` |
+| `devtools_suspected` | 개발자 도구 열림 의심 (도킹된 경우만, **오탐 있음**) | — |
+| `code_copied` | 에디터 코드 복사/잘라내기 (유출 방향) | `chars` |
+
+`severity`(`info`/`warn`/`critical`)는 화면 색상용이므로 서버가 신뢰할 필요 없다.
+
+**요약 필드에서 실제로 쓸 만한 값**
+
+- `authorshipRatio` = 키보드로 친 문자 / (친 문자 + 그냥 나타난 문자). **가장 강한 단일 지표** —
+  1.0이면 전부 직접 타이핑, 0에 가까우면 코드가 어디선가 통째로 들어왔다는 뜻
+- `internalPasteChars` — IDE 안에서 복사한 코드를 다시 붙여넣은 양. **분자·분모 어느 쪽에도 넣지
+  않는다**(자필률 불변). 처음 작성할 때 이미 `typedChars`로 세었고, 자필률은 '코드가 어디서
+  왔나'를 재는 값이라 본인 코드의 복제로 흔들리면 안 되기 때문. 값이 비정상적으로 크면
+  "같은 블록을 반복 복제"한 것이므로 참고 지표로는 쓸 수 있다
+- `blurredMs`/`blurCount` — 이탈 자체는 무죄로 취급(riskScore 가산 0). `return_bulk_insert`와
+  묶일 때만 의미가 생긴다
+- `riskScore`는 **클라이언트 추정치**다. 서버는 이벤트 원본으로 자체 재계산하는 편이 낫다
+
+**서버 측 권장 처리**
+
+1. `solveSessionId`로 §2.8 열람 기록과 조인 → 제출·풀이시간 이상치와 함께 저장
+2. 이벤트는 append-only 로그로. 판정은 제출 단위로 별도 집계
+3. **코드 내용은 오지 않는다** — 문자 수만 온다(프라이버시). 코드 유사도 검사는 제출 본문으로
+4. 신뢰 경계: 클라이언트가 보내는 값이라 **위조·누락이 가능**하다. "신호가 없음"을 결백의
+   근거로 쓰면 안 되고(탐지 코드를 꺼버린 경우와 구분 불가), 제재는 서버 측 근거(코드 유사도,
+   비정상적으로 짧은 풀이시간)와 교차 확인 후에만
+5. 남용 방지: 세션당 이벤트 수 상한 / `429` 레이트리밋 권장 (프론트 큐 상한은 200건)
+
 ---
 
 ## 3. Judge0 연동 (백엔드 내부)
@@ -536,7 +608,7 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 |---|---|---|
 | A1 점수/티어/하락 공식 | 점수=고정(확정), 하락=추후 개발 | `decay` null 운용 → 구현 시 채움. 티어 컷 절댓값. **챌린저(100명)** 확정 시 `TierRank.name`에 `'challenger'` 추가 + 프론트 색상/라벨 추가 필요 |
 | A2 시즌 주기 | **6개월**(스펙 red) vs 와이어프레임 3개월 | 날짜는 전부 서버 응답 기준이라 코드 영향 없음. 시즌 시드만 정확히 |
-| A3 부정행위 탐지 | 본문 IDE-only 확정, 신호 수집 범위 미확정 | 현재: `open` 시각 기록 + `solveSessionId` 연결 + 프론트 붙여넣기 차단. 확정 시 제안: `POST /solve-sessions/{id}/events` 배치(`paste_blocked`, `focus_lost`, `devtools_open` 등) — 프론트 송신 로직 추가 작업 필요 |
+| A3 부정행위 탐지 | 본문 IDE-only 확정, **클라이언트 신호 수집 구현 완료**, 판정·제재 기준 미확정 | `POST /solve-sessions/{id}/events` **구현됨**(§2.17) — 9종 신호 + 세션 요약 배치 전송. 백엔드는 수신·저장만 하면 되고, **어느 점수부터 어떤 조치를 할지는 운영 결정 대기**. 캠 감독·IP/기기 지문은 여전히 범위 밖 |
 | A4 칭호 발급 규칙 | 골드 이상부터 발급(확정), 조건 상세 미정 | 발급=백엔드 배치/이벤트. API는 `titles[]`로 충분 |
 | B4 어드민 | DEFERRED | 문제/TC/시즌/칭호 투입 전부 seed 스크립트. 어드민 API 불필요(MVP) |
 | C3 KPI | "정의 사항 개발 + 랜딩 페이지" | **비로그인 랜딩 페이지는 Deferred 목록에도 있음** — 충돌. 현재 프론트는 로그인 화면이 비로그인 진입점. 랜딩 확정 시 별도 페이지 추가 |
@@ -559,7 +631,15 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
    - 홈 '내 주변 순위'를 실제 내 순위(4위) ±2로 정합화
    - 로그인 화면 추가(와이어프레임 9화면에 없으나 SPA 진입점으로 필수)
    - 문제 상세 '내 제출' 탭에 실제 목록 구현(와이어프레임은 탭만 존재)
-   - IDE 에디터에 붙여넣기 차단 + 경고 문구(A3 "복붙 금지(필)" 반영)
+   - IDE 에디터에 **외부** 붙여넣기 차단 + 경고 문구(A3 "복붙 금지(필)" 반영). 단, 이 에디터에서
+     복사한 코드의 재붙여넣기는 허용한다 — 본인이 방금 쓴 코드의 재사용까지 막으면 정상 작성이
+     불편해지고, 어차피 그 코드는 이미 자필로 집계돼 있다. 판별은 복사 시점의 텍스트 이력
+     대조(페이지 인스턴스 메모리, 최근 20건)라서 다른 탭·다른 문제에서 복사한 코드는 통과하지 못한다
+   - IDE 툴바에 **무결성 상태 배지**(정상/주의/위험)와 기록 패널 — 수집 내역을 유저에게 그대로
+     공개한다. 몰래 수집하지 않는 편이 억제 효과가 크고 오탐도 유저가 바로 알아챌 수 있다.
+     위험 단계에서도 제출은 막지 않고 "검토 대상으로 표시됩니다"만 알린다 (판정은 서버 몫)
+7. **부정행위 신호 튜닝**: 임계값은 전부 `src/antiCheat/detector.ts`의 `THRESHOLDS` 상수 한 곳에 모여
+   있다. 오탐 신고가 들어오면 로직이 아니라 이 숫자만 조정하면 된다
 
 ---
 

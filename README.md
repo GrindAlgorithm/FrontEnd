@@ -48,6 +48,7 @@ src/
   types/domain.ts # 응답 스키마 = 백엔드 연동 문서와 1:1
   pages/          # 화면 9 + 로그인
   components/     # Tier, TitleBadge, JandiGrid, CodeEditor, TabBar, DecayBanner …
+  antiCheat/      # 부정행위 탐지: detector(순수 로직) · useAntiCheat(훅) · IntegrityIndicator(UI)
   context/        # AuthContext (세션 부팅·로그인/아웃)
   constants/      # 지원 언어·스타터 코드
   theme.ts        # 디자인 토큰 (와이어프레임 이관)
@@ -59,4 +60,9 @@ docs/BACKEND_INTEGRATION.md   # 백엔드 개발자용 연동 명세
 - **본문 IDE-only(B2)**: `GET /problems/{id}`에는 본문이 없다. `POST /problems/{id}/open`(IDE 진입)만 본문을 내려주며 열람 시각이 기록된다
 - **영구 티어 없음(B1)**: 시즌 종료 시 티어·점수 초기화. 모든 티어 표기는 "시즌 티어"
 - **정답자 한정 토론**: Accepted 이력이 있어야 글 목록 열람
-- **붙여넣기 차단(A3)**: IDE 에디터에서 외부 붙여넣기 차단 + 경고
+- **부정행위 탐지(A3)**: IDE 에디터에서 **외부** 붙여넣기·드롭 차단 + 경고
+  (이 에디터에서 복사한 코드의 재붙여넣기는 허용 — 본인이 쓴 코드의 재사용은 정상 행위).
+  차단은 우회될 수 있으므로
+  **키 입력 없이 늘어난 코드**(대량 삽입), 입력 속도/리듬 이상, 창 이탈, DevTools 의심까지 함께
+  수집해 `POST /solve-sessions/{id}/events`로 배치 전송한다. 툴바 배지로 수집 내역을 유저에게 공개하며,
+  위험 단계여도 제출은 막지 않는다 — **판정은 서버 몫** (`src/antiCheat/`, 연동 문서 §2.17)
