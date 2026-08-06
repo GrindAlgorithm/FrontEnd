@@ -20,7 +20,8 @@
   - 엔드포인트(경로/메서드): `src/api/real.ts` + 인터페이스 `src/api/client.ts`
   - 이 문서와 위 파일은 1:1 — 한쪽을 바꾸면 반드시 같이 갱신
 - API 모드(`.env`의 `VITE_USE_MOCK`): `true`=전부 목 / `hybrid`=백엔드 구현분(현재
-  §2.5 시즌, §2.6 시즌 문제)만 실서버, 나머지 목 / `false`=전부 실서버.
+  §2.4 대시보드, §2.5·2.5-b·2.6 시즌, §2.7 문제 상세, §2.8 본문 열람, §2.9 실행,
+  §2.10~2.12 제출·채점, §2.13 랭킹)만 실서버, 나머지 목 / `false`=전부 실서버.
   백엔드 엔드포인트가 추가되면 `src/api/index.ts`의 `hybridApi`에 한 줄씩 옮긴다
 - dev 프록시(`vite.config.ts`): `/api`, `/oauth2`, `/login/oauth2` → `http://localhost:8080`
 
@@ -29,8 +30,8 @@
 | # | 화면 (라우트) | 사용하는 엔드포인트 |
 |---|---|---|
 | 1 | 홈 `/` | `GET /me`, `GET /dashboard` |
-| 2 | 문제 목록 `/problems` | `GET /seasons`, `GET /seasons/{id}/problems` |
-| 2-b | 채점 현황(내부 탭) `/problems?tab=submissions` | `GET /submissions` |
+| 2 | 문제 목록 `/problems` | `GET /seasons`, `GET /seasons/{id}`, `GET /seasons/{id}/problems` |
+| 2-b | 채점 현황(내부 탭) `/problems?tab=submissions` | `GET /seasons`, `GET /submissions?seasonId=` |
 | 3 | 문제 상세 `/problems/{problemId}` | `GET /problems/{problemId}`, (내 제출 탭) `GET /submissions?problemId=&mine=true` |
 | 4 | IDE `/problems/{problemId}/solve` | `POST /problems/{problemId}/open`, `POST /runs`, `POST /submissions`, `GET /submissions/{id}`, `POST /solve-sessions/{id}/events` |
 | 5 | 문제 토론 `/problems/{problemId}/discussion` | `GET /problems/{problemId}/discussions` |
@@ -233,6 +234,16 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 - `status`: `'current' | 'past' | 'beta'` — 시즌 구조는 S0=베타 / 과거시즌(연습용 영구 보관) / 현재시즌(랭킹 반영)
 - 정렬: 최신(현재) 시즌 먼저
 
+### 2.5-b `GET /seasons/{seasonId}` — 시즌 단건 기간 정보
+
+**200** — §2.5 배열의 항목 하나와 동일 구조
+
+```json
+{ "id": 2, "name": "Season 2", "startDate": "2026-07-01", "endDate": "2026-09-30", "status": "current", "dDay": 72 }
+```
+- 없는 시즌이면 실패 봉투(`resultCode` ≠ `0000`)
+- ⚠ 시즌 화면이 쓰는 `GET /seasons/current`와 **다른 엔드포인트**다. 이쪽은 기간 정보만, 저쪽은 진행률·챌린지·리워드까지 (`/seasons/current`는 아직 백엔드 미구현 = 목)
+
 ### 2.6 `GET /seasons/{seasonId}/problems` — 시즌 문제 목록
 
 **200**
@@ -379,12 +390,16 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 
 ### 2.12 `GET /submissions` — 채점 현황 목록
 
-쿼리: `problemId`(선택), `mine=true`(선택, 내 것만), (제안) `page`/`size`
+쿼리: `seasonId`(선택), `problemId`(선택), `mine=true`(선택, 내 것만), (제안) `page`/`size`
 
 | 화면 | 호출 |
 |---|---|
-| 문제 페이지 "채점 현황" 탭 | `GET /submissions` (전체 공개 피드, 최신순) |
+| 문제 페이지 "채점 현황" 탭 | `GET /submissions?seasonId=2` (선택된 시즌 탭 기준, 최신순) |
 | 문제 상세 "내 제출" 탭 | `GET /submissions?problemId=S2-08&mine=true` |
+
+- `seasonId` — 제출 → 문제 → 시즌 경로로 필터. **비시즌(일반) 문제 제출은 시즌 필터에서 제외**된다
+- ⚠ `mine`은 백엔드에서 아직 **무시**된다(유저/인증 도메인 미연동, `SubmissionServiceImpl` TODO).
+  인증 붙기 전까지 문제 상세 "내 제출" 탭은 전체 제출이 내려온다
 
 **200** — §2.11 객체의 배열 (최신순). MVP는 페이징 없이 최근 N(50)건 허용, 페이징 도입 시 협의
 

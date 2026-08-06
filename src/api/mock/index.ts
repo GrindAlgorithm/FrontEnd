@@ -151,6 +151,13 @@ export const mockApi: ApiClient = {
     return SEASONS.map(s => ({ ...s }))
   },
 
+  async getSeason(seasonId) {
+    await delay()
+    const season = SEASONS.find(s => s.id === seasonId)
+    if (!season) throw new ApiError(404, 'SEASON_NOT_FOUND', `시즌이 없습니다: ${seasonId}`)
+    return { ...season }
+  },
+
   async getSeasonProblems(seasonId) {
     await delay()
     const problems = SEASON_PROBLEMS[seasonId]
@@ -262,6 +269,9 @@ export const mockApi: ApiClient = {
   async listSubmissions(params) {
     await delay()
     let rows = [...createdSubmissions, ...SEED_SUBMISSIONS]
+    // 백엔드는 제출 → 문제 → 시즌 경로로 거른다 (비시즌 문제는 시즌 필터에서 빠짐)
+    if (params?.seasonId != null)
+      rows = rows.filter(s => seasonIdOf(s.problem.problemId) === params.seasonId)
     if (params?.problemId) rows = rows.filter(s => s.problem.problemId === params.problemId)
     if (params?.mine) rows = rows.filter(s => s.user.handle === me.handle)
     return rows.map(s => ({ ...s }))

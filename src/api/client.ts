@@ -34,6 +34,7 @@ export interface ApiClient {
 
   // ── 시즌/문제 ──
   getSeasons(): Promise<SeasonSummary[]>
+  getSeason(seasonId: number): Promise<SeasonSummary>
   getSeasonProblems(seasonId: number): Promise<ProblemSummary[]>
   getCurrentSeasonDetail(): Promise<SeasonDetailResponse>
   getProblem(problemId: string): Promise<ProblemDetail>
@@ -43,7 +44,11 @@ export interface ApiClient {
   runCode(req: RunRequest): Promise<RunResult>
   submit(req: SubmitRequest): Promise<SubmitResponse>
   getSubmission(submissionId: number): Promise<SubmissionSummary>
-  listSubmissions(params?: { problemId?: string; mine?: boolean }): Promise<SubmissionSummary[]>
+  listSubmissions(params?: {
+    seasonId?: number
+    problemId?: string
+    mine?: boolean
+  }): Promise<SubmissionSummary[]>
 
   // ── 부정행위 신호 배치 (A3) ──
   /** 실패해도 화면 흐름에 영향을 주지 않는다 — 호출부가 조용히 재시도만 한다 */

@@ -13,6 +13,7 @@ export const realApi: ApiClient = {
   getDashboard: () => http.get('/dashboard'),
 
   getSeasons: () => http.get('/seasons'),
+  getSeason: seasonId => http.get(`/seasons/${seasonId}`),
   getSeasonProblems: seasonId => http.get(`/seasons/${seasonId}/problems`),
   getCurrentSeasonDetail: () => http.get('/seasons/current'),
   getProblem: problemId => http.get(`/problems/${encodeURIComponent(problemId)}`),
@@ -23,6 +24,7 @@ export const realApi: ApiClient = {
   getSubmission: submissionId => http.get(`/submissions/${submissionId}`),
   listSubmissions: params => {
     const q = new URLSearchParams()
+    if (params?.seasonId != null) q.set('seasonId', String(params.seasonId))
     if (params?.problemId) q.set('problemId', params.problemId)
     if (params?.mine) q.set('mine', 'true')
     const qs = q.toString()

@@ -44,12 +44,12 @@ export function ProblemsPage() {
         fontSize={14}
       />
 
-      {tab === 'submissions' ? (
-        <SubmissionsView />
-      ) : seasons.loading ? (
+      {seasons.loading ? (
         <LoadingView />
       ) : seasons.error || !seasons.data ? (
         <ErrorView error={seasons.error ?? new Error('데이터 없음')} onRetry={seasons.reload} />
+      ) : tab === 'submissions' ? (
+        <SubmissionsView seasons={seasons.data} />
       ) : (
         <SeasonProblemsView seasons={seasons.data} />
       )}
@@ -57,19 +57,98 @@ export function ProblemsPage() {
   )
 }
 
-function SubmissionsView() {
-  const { data, loading, error, reload } = useApi(() => api.listSubmissions(), [])
-  if (loading) return <LoadingView />
-  if (error || !data) return <ErrorView error={error ?? new Error('데이터 없음')} onRetry={reload} />
-  return <SubmissionsTable rows={data} />
-}
-
-function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
+/** 시즌 선택 — 문제 목록/채점 현황 두 탭이 `?season=` 파라미터를 공유한다 */
+function useSeasonSelection(seasons: SeasonSummary[]) {
   const [params, setParams] = useSearchParams()
   const fromUrl = Number(params.get('season'))
   const currentSeason = seasons.find(s => s.status === 'current') ?? seasons[0]
   const seasonId = seasons.some(s => s.id === fromUrl) ? fromUrl : currentSeason.id
   const season = seasons.find(s => s.id === seasonId)!
+
+  const setSeason = (id: number) => {
+    const next = new URLSearchParams(params)
+    next.set('season', String(id))
+    setParams(next, { replace: true })
+  }
+
+  return { season, seasonId, setSeason }
+}
+
+function SeasonTabs({
+  seasons,
+  seasonId,
+  onSelect,
+}: {
+  seasons: SeasonSummary[]
+  seasonId: number
+  onSelect: (id: number) => void
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: `1px solid ${C.border}` }}>
+      {seasons.map(s => (
+        <button
+          key={s.id}
+          onClick={() => onSelect(s.id)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            padding: '8px 14px',
+            fontSize: 13,
+            cursor: 'pointer',
+            color: seasonId === s.id ? C.text : C.muted,
+            fontWeight: seasonId === s.id ? 600 : 400,
+            borderBottom: seasonId === s.id ? `2px solid ${C.blue}` : '2px solid transparent',
+            marginBottom: -1,
+            fontFamily: fontStack,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <span>{s.name}</span>
+          <span
+            style={{
+              fontSize: 10,
+              padding: '1px 6px',
+              background: s.status === 'current' ? C.blue : C.borderLight,
+              color: s.status === 'current' ? '#fff' : C.muted,
+              borderRadius: 2,
+              fontWeight: 600,
+            }}
+          >
+            {s.status === 'current' ? '현재' : '과거'}
+          </span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function SubmissionsView({ seasons }: { seasons: SeasonSummary[] }) {
+  const { seasonId, setSeason } = useSeasonSelection(seasons)
+  const { data, loading, error, reload } = useApi(
+    () => api.listSubmissions({ seasonId }),
+    [seasonId],
+  )
+
+  return (
+    <>
+      <SeasonTabs seasons={seasons} seasonId={seasonId} onSelect={setSeason} />
+      {loading ? (
+        <LoadingView />
+      ) : error || !data ? (
+        <ErrorView error={error ?? new Error('데이터 없음')} onRetry={reload} />
+      ) : data.length === 0 ? (
+        <p style={{ fontSize: 13, color: C.muted, padding: '24px 0' }}>이 시즌의 제출이 없습니다.</p>
+      ) : (
+        <SubmissionsTable rows={data} />
+      )}
+    </>
+  )
+}
+
+function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
+  const { season, seasonId, setSeason } = useSeasonSelection(seasons)
   const isCurrent = season.status === 'current'
   const [q, setQ] = useState('')
 
@@ -77,12 +156,6 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
     () => api.getSeasonProblems(seasonId),
     [seasonId],
   )
-
-  const setSeason = (id: number) => {
-    const next = new URLSearchParams(params)
-    next.set('season', String(id))
-    setParams(next, { replace: true })
-  }
 
   const filtered = useMemo(
     () => (problems ?? []).filter(p => !q || p.title.includes(q) || p.displayNo.includes(q)),
@@ -92,44 +165,7 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
 
   return (
     <>
-      {/* Season tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: `1px solid ${C.border}` }}>
-        {seasons.map(s => (
-          <button
-            key={s.id}
-            onClick={() => setSeason(s.id)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              padding: '8px 14px',
-              fontSize: 13,
-              cursor: 'pointer',
-              color: seasonId === s.id ? C.text : C.muted,
-              fontWeight: seasonId === s.id ? 600 : 400,
-              borderBottom: seasonId === s.id ? `2px solid ${C.blue}` : '2px solid transparent',
-              marginBottom: -1,
-              fontFamily: fontStack,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <span>{s.name}</span>
-            <span
-              style={{
-                fontSize: 10,
-                padding: '1px 6px',
-                background: s.status === 'current' ? C.blue : C.borderLight,
-                color: s.status === 'current' ? '#fff' : C.muted,
-                borderRadius: 2,
-                fontWeight: 600,
-              }}
-            >
-              {s.status === 'current' ? '현재' : '과거'}
-            </span>
-          </button>
-        ))}
-      </div>
+      <SeasonTabs seasons={seasons} seasonId={seasonId} onSelect={setSeason} />
 
       {/* Season banner */}
       {isCurrent ? (

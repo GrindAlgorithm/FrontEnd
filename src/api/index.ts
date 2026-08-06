@@ -16,6 +16,7 @@ const hybridApi: ApiClient = {
   ...mockApi,
   getDashboard: realApi.getDashboard,
   getSeasons: realApi.getSeasons,
+  getSeason: realApi.getSeason,
   getSeasonProblems: realApi.getSeasonProblems,
   getProblem: realApi.getProblem,
   openProblem: realApi.openProblem,
