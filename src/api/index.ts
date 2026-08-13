@@ -20,7 +20,8 @@ const hybridApi: ApiClient = {
   getSeasonProblems: realApi.getSeasonProblems,
   getProblem: realApi.getProblem,
   openProblem: realApi.openProblem,
-  runCode: realApi.runCode,
+  // runCode: 목 유지 — 로컬 Judge0(isolate)가 cgroup v1 부재로 채점 불가라
+  // 백엔드 judge0.client=stub 이 stdin을 그대로 echo 한다. 실행 결과가 의미를 갖지 못해 목으로 되돌림.
   submit: realApi.submit,
   getSubmission: realApi.getSubmission,
   listSubmissions: realApi.listSubmissions,
@@ -37,7 +38,7 @@ if (mode !== 'false') {
   // eslint-disable-next-line no-console
   console.info(
     mode === 'hybrid'
-      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌/문제목록/문제상세/문제풀기(IDE)/실행/제출/채점현황/랭킹은 백엔드(:8080), 나머지는 목'
+      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌/문제목록/문제상세/문제풀기(IDE)/제출/채점현황/랭킹은 백엔드(:8080), 코드 실행과 나머지는 목'
       : '[GrindAlgorithm] 목 API 모드로 실행 중 — .env의 VITE_USE_MOCK=hybrid|false 로 백엔드 연동',
   )
 }
