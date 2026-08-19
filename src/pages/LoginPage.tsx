@@ -6,22 +6,25 @@ import { useAuth } from '../context/AuthContext'
 import { C, fontStack } from '../theme'
 
 /**
- * 로그인 — 소셜(GitHub/Google OAuth2) + 자체 이메일 로그인.
- * 실제 모드: OAuth는 Spring Security 표준 경로(/oauth2/authorization/{provider})로 리다이렉트.
- * 목 모드: 즉시 로그인 처리.
+ * 로그인/회원가입 — 자체 이메일 인증(세션 쿠키) + 소셜(OAuth2, 백엔드 준비 시).
+ * mode 로 로그인/회원가입 폼을 토글한다. 회원가입은 즉시 가입(POST /auth/signup).
  */
 export function LoginPage() {
-  const { me, booting, login } = useAuth()
+  const { me, booting, login, signup } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from ?? '/'
 
+  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [handle, setHandle] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!booting && me) return <Navigate to={from} replace />
+
+  const isSignup = mode === 'signup'
 
   const handleOAuth = async (provider: 'github' | 'google') => {
     if (IS_MOCK) {
@@ -38,18 +41,33 @@ export function LoginPage() {
     window.location.href = `/oauth2/authorization/${provider}`
   }
 
-  const handleEmailLogin = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setPending(true)
     setError(null)
     try {
-      await login(email, password)
+      if (isSignup) {
+        await signup(email, password, handle)
+      } else {
+        await login(email, password)
+      }
       navigate(from, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인에 실패했습니다')
+      setError(
+        err instanceof Error
+          ? err.message
+          : isSignup
+            ? '회원가입에 실패했습니다'
+            : '로그인에 실패했습니다',
+      )
     } finally {
       setPending(false)
     }
+  }
+
+  const switchMode = (next: 'login' | 'signup') => {
+    setMode(next)
+    setError(null)
   }
 
   const inputStyle = {
@@ -121,11 +139,11 @@ export function LoginPage() {
         }}
       >
         <div style={{ flex: 1, height: 1, background: C.borderLight }} />
-        또는
+        {isSignup ? '이메일로 회원가입' : '또는'}
         <div style={{ flex: 1, height: 1, background: C.borderLight }} />
       </div>
 
-      <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <input
           type="email"
           placeholder="이메일"
@@ -134,12 +152,22 @@ export function LoginPage() {
           autoComplete="email"
           style={inputStyle}
         />
+        {isSignup && (
+          <input
+            type="text"
+            placeholder="닉네임 (영문/숫자/밑줄, 2~20자)"
+            value={handle}
+            onChange={e => setHandle(e.target.value)}
+            autoComplete="username"
+            style={inputStyle}
+          />
+        )}
         <input
           type="password"
-          placeholder="비밀번호"
+          placeholder={isSignup ? '비밀번호 (8자 이상)' : '비밀번호'}
           value={password}
           onChange={e => setPassword(e.target.value)}
-          autoComplete="current-password"
+          autoComplete={isSignup ? 'new-password' : 'current-password'}
           style={inputStyle}
         />
         {error && <div style={{ fontSize: 12, color: C.red }}>{error}</div>}
@@ -159,14 +187,58 @@ export function LoginPage() {
             marginTop: 4,
           }}
         >
-          {pending ? '로그인 중…' : '이메일로 로그인'}
+          {pending
+            ? isSignup
+              ? '가입 중…'
+              : '로그인 중…'
+            : isSignup
+              ? '회원가입'
+              : '이메일로 로그인'}
         </button>
       </form>
 
-      <p style={{ fontSize: 11, color: C.muted, textAlign: 'center', marginTop: 20, lineHeight: 1.6 }}>
-        처음이라면 소셜 로그인으로 가입이 자동 진행됩니다.
-        <br />
-        이메일 가입(인증 포함)은 준비 중입니다.
+      <p style={{ fontSize: 12, color: C.muted, textAlign: 'center', marginTop: 20 }}>
+        {isSignup ? (
+          <>
+            이미 계정이 있으신가요?{' '}
+            <button
+              type="button"
+              onClick={() => switchMode('login')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                color: C.blue,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: fontStack,
+                fontSize: 12,
+              }}
+            >
+              로그인
+            </button>
+          </>
+        ) : (
+          <>
+            처음이신가요?{' '}
+            <button
+              type="button"
+              onClick={() => switchMode('signup')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                color: C.blue,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: fontStack,
+                fontSize: 12,
+              }}
+            >
+              회원가입
+            </button>
+          </>
+        )}
       </p>
     </div>
   )

@@ -8,6 +8,7 @@ import type { ApiClient } from './client'
 export const realApi: ApiClient = {
   getMe: () => http.get('/me'),
   login: req => http.post('/auth/login', req),
+  signup: req => http.post('/auth/signup', req),
   logout: () => http.post('/auth/logout'),
 
   getDashboard: () => http.get('/dashboard'),
@@ -41,4 +42,10 @@ export const realApi: ApiClient = {
 
   getDiscussions: problemId =>
     http.get(`/problems/${encodeURIComponent(problemId)}/discussions`),
+
+  // ── 관리자: 공지 CRUD (ADMIN 전용) ──
+  adminListNotices: () => http.get('/admin/notices'),
+  adminCreateNotice: req => http.post('/admin/notices', req),
+  adminUpdateNotice: (id, req) => http.put(`/admin/notices/${id}`, req),
+  adminDeleteNotice: id => http.delete(`/admin/notices/${id}`),
 }

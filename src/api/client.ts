@@ -2,6 +2,8 @@ import type {
   DashboardResponse,
   DiscussionResponse,
   MeResponse,
+  Notice,
+  NoticeRequest,
   OpenProblemResponse,
   ProblemDetail,
   ProblemSummary,
@@ -11,6 +13,7 @@ import type {
   RunResult,
   SeasonDetailResponse,
   SeasonSummary,
+  SignupRequest,
   SolveEventBatch,
   SubmissionSummary,
   SubmitRequest,
@@ -27,6 +30,7 @@ export interface ApiClient {
   // ── 인증 ──
   getMe(): Promise<MeResponse>
   login(req: { email: string; password: string }): Promise<MeResponse>
+  signup(req: SignupRequest): Promise<MeResponse>
   logout(): Promise<void>
 
   // ── 홈 ──
@@ -63,4 +67,10 @@ export interface ApiClient {
 
   // ── 토론 ──
   getDiscussions(problemId: string): Promise<DiscussionResponse>
+
+  // ── 관리자: 공지 CRUD (ADMIN 전용, /admin/notices) ──
+  adminListNotices(): Promise<Notice[]>
+  adminCreateNotice(req: NoticeRequest): Promise<Notice>
+  adminUpdateNotice(id: number, req: NoticeRequest): Promise<Notice>
+  adminDeleteNotice(id: number): Promise<void>
 }

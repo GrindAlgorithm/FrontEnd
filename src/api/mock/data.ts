@@ -55,6 +55,7 @@ export function pointsOf(t: TierName, l: TierLevel): number {
 
 export const ME: MeResponse = {
   handle: 'algo_lover',
+  role: 'USER',
   joinedAt: '2025-12-03T09:00:00+09:00',
   seasonTier: tier('platinum', 'II'),
   seasonScore: 2433,

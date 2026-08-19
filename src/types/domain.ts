@@ -34,11 +34,26 @@ export type TitleColorKey = TierName | 'green' | 'blue'
 
 export interface MeResponse {
   handle: string
+  role: 'USER' | 'ADMIN' // 관리자 탭 노출 판단용
   joinedAt: string // ISO 8601
   seasonTier: TierRank | null // 시즌 미참여(미배치) 시 null
   seasonScore: number
   seasonRank: number | null
   selectedTitleId: string | null
+}
+
+// 회원가입 요청 (POST /auth/signup)
+export interface SignupRequest {
+  email: string
+  password: string
+  handle: string
+}
+
+// 관리자 공지 작성/수정 요청 (POST·PUT /admin/notices)
+export interface NoticeRequest {
+  tag: string
+  title: string
+  highlight: boolean
 }
 
 // ── 홈 대시보드 ──────────────────────────────────────────────

@@ -10,6 +10,7 @@ import { RankingPage } from './pages/RankingPage'
 import { SeasonPage } from './pages/SeasonPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { LoginPage } from './pages/LoginPage'
+import { AdminPage } from './pages/AdminPage'
 
 export default function App() {
   return (
@@ -25,6 +26,8 @@ export default function App() {
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/season" element={<SeasonPage />} />
           <Route path="/users/:handle" element={<ProfilePage />} />
+          {/* 관리자 전용 — 페이지 내부에서 role 가드(백엔드도 403으로 보호) */}
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
       </Route>
 

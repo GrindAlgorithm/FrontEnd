@@ -5,8 +5,8 @@ import { mockApi } from './mock'
 // VITE_USE_MOCK: 'false'=전부 실서버 / 'hybrid'=백엔드 구현분만 실서버 / 그 외(미설정 포함)=목
 const mode = import.meta.env.VITE_USE_MOCK
 
-/** 목 모드 여부 — OAuth 리다이렉트처럼 fetch 밖의 분기에 사용 (hybrid는 인증이 목이므로 true) */
-export const IS_MOCK = mode !== 'false'
+/** 목 모드 여부 — OAuth 리다이렉트처럼 fetch 밖의 분기에 사용. hybrid는 인증이 실서버라 false */
+export const IS_MOCK = mode !== 'false' && mode !== 'hybrid'
 
 /**
  * 하이브리드: 백엔드에 이미 구현된 엔드포인트만 실서버, 나머지는 목.
@@ -14,6 +14,11 @@ export const IS_MOCK = mode !== 'false'
  */
 const hybridApi: ApiClient = {
   ...mockApi,
+  // 인증 — DB 기반 로그인/회원가입/세션 (백엔드 구현 완료)
+  getMe: realApi.getMe,
+  login: realApi.login,
+  signup: realApi.signup,
+  logout: realApi.logout,
   getDashboard: realApi.getDashboard,
   getSeasons: realApi.getSeasons,
   getSeason: realApi.getSeason,
@@ -26,6 +31,11 @@ const hybridApi: ApiClient = {
   getSubmission: realApi.getSubmission,
   listSubmissions: realApi.listSubmissions,
   getRanking: realApi.getRanking,
+  // 관리자 공지 CRUD (ADMIN 전용)
+  adminListNotices: realApi.adminListNotices,
+  adminCreateNotice: realApi.adminCreateNotice,
+  adminUpdateNotice: realApi.adminUpdateNotice,
+  adminDeleteNotice: realApi.adminDeleteNotice,
 }
 
 export const api: ApiClient =

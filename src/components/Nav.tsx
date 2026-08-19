@@ -23,6 +23,15 @@ export function Nav() {
     navigate('/login')
   }
 
+  // 관리자 탭 — ADMIN 권한일 때만 노출
+  const navLinks =
+    me?.role === 'ADMIN'
+      ? [
+          ...NAV_LINKS,
+          { to: '/admin', label: '관리자', isActive: (p: string) => p.startsWith('/admin') },
+        ]
+      : NAV_LINKS
+
   return (
     <header style={{ borderBottom: `1px solid ${C.borderLight}`, background: '#fff' }}>
       <div
@@ -33,7 +42,7 @@ export function Nav() {
           Grind<span style={{ color: C.blue }}>Algorithm</span>
         </Link>
         <nav style={{ display: 'flex', gap: 20, flex: 1 }}>
-          {NAV_LINKS.map(l => {
+          {navLinks.map(l => {
             const active = l.isActive(pathname)
             return (
               <Link

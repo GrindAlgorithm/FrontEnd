@@ -8,6 +8,7 @@ interface AuthState {
   /** 최초 세션 확인이 끝나기 전 true — 이 동안엔 로그인 페이지로 보내지 않는다 */
   booting: boolean
   login: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string, handle: string) => Promise<void>
   logout: () => Promise<void>
   refresh: () => Promise<void>
 }
@@ -41,14 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMe(await api.login({ email, password }))
   }, [])
 
+  const signup = useCallback(async (email: string, password: string, handle: string) => {
+    setMe(await api.signup({ email, password, handle }))
+  }, [])
+
   const logout = useCallback(async () => {
     await api.logout()
     setMe(null)
   }, [])
 
   const value = useMemo(
-    () => ({ me, booting, login, logout, refresh }),
-    [me, booting, login, logout, refresh],
+    () => ({ me, booting, login, signup, logout, refresh }),
+    [me, booting, login, signup, logout, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -113,6 +113,15 @@ export const mockApi: ApiClient = {
     return { ...me }
   },
 
+  async signup(req) {
+    await delay(300)
+    if (!req.email || !req.password || !req.handle) {
+      throw new ApiError(400, 'VALIDATION_FAILED', '이메일·비밀번호·닉네임을 입력하세요')
+    }
+    loggedIn = true
+    return { ...me, handle: req.handle }
+  },
+
   async logout() {
     await delay(100)
     loggedIn = false
@@ -395,6 +404,27 @@ export const mockApi: ApiClient = {
       stats,
       posts: DISCUSSION_POSTS,
     }
+  },
+
+  // ── 관리자: 공지 CRUD (목 — 메모리 상태) ──
+  async adminListNotices() {
+    await delay()
+    requireAuth()
+    return [...NOTICES]
+  },
+  async adminCreateNotice(req) {
+    await delay()
+    requireAuth()
+    return { id: Date.now(), ...req, publishedAt: new Date().toISOString() }
+  },
+  async adminUpdateNotice(id, req) {
+    await delay()
+    requireAuth()
+    return { id, ...req, publishedAt: new Date().toISOString() }
+  },
+  async adminDeleteNotice() {
+    await delay()
+    requireAuth()
   },
 }
 
