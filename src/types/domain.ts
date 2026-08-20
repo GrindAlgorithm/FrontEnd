@@ -42,6 +42,13 @@ export interface MeResponse {
   selectedTitleId: string | null
 }
 
+/** 지원 언어 (GET /languages, 요건 24) — 서버 language 테이블이 노출/순서/표시명의 소유자.
+ *  단 신규 언어는 프론트 자산(STARTER_CODE·하이라이트)이 없으면 셀렉터에서 걸러진다. */
+export interface LanguageInfo {
+  code: LanguageCode
+  label: string
+}
+
 // 회원가입 요청 (POST /auth/signup)
 export interface SignupRequest {
   email: string

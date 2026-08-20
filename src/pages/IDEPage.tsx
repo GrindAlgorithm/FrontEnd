@@ -16,6 +16,10 @@ export function IDEPage() {
   const { problemId } = useParams<{ problemId: string }>()
   // 본문 열람 = 풀이 시작 시각 기록 (B2). 열람 시점이 서버에 남는다.
   const open = useApi(() => api.openProblem(problemId!), [problemId])
+  // 지원 언어 (요건 24) — 서버 목록이 소유자. 로딩 전/실패 시엔 로컬 상수로 동작.
+  // 프론트 자산(스타터 코드·하이라이트)이 없는 신규 언어는 걸러낸다.
+  const languagesApi = useApi(() => api.getLanguages(), [])
+  const languages = (languagesApi.data ?? LANGUAGES).filter(l => l.code in STARTER_CODE)
   // 부정행위 신호 수집 (A3) — 훅 순서를 지키려고 본문 로딩 전에도 호출한다.
   // solveSessionId가 채워지기 전까지는 수집만 하고 전송하지 않는다.
   const antiCheat = useAntiCheat({
@@ -296,7 +300,7 @@ export function IDEPage() {
               cursor: 'pointer',
             }}
           >
-            {LANGUAGES.map(l => (
+            {languages.map(l => (
               <option key={l.code} value={l.code}>
                 {l.label}
               </option>
@@ -493,7 +497,7 @@ export function IDEPage() {
           }}
         >
           <span>Ln {code.split('\n').length}</span>
-          <span>{LANGUAGES.find(l => l.code === lang)?.label}</span>
+          <span>{languages.find(l => l.code === lang)?.label ?? lang}</span>
           <span>UTF-8</span>
           <span>Spaces: 4</span>
           <div style={{ flex: 1 }} />

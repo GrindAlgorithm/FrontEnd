@@ -617,7 +617,11 @@ IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 
 | `nodejs` | JavaScript (Node.js) | 63 |
 
 - self-host라 language_id는 빌드 구성에 따라 달라질 수 있음 — **백엔드 내부에서만 매핑**하고 API 계약은 위 `LanguageCode` 문자열로 고정
-- 언어 추가 시: 백엔드 매핑 + 프론트 `src/constants/languages.ts`(표시명·스타터 코드) 동시 갱신
+- **요건 24 구현 완료 — `language` 테이블이 목록·표시명·judge0_id 의 단일 소유자**:
+  - `GET /languages` → `[{ "code": "java11", "label": "Java 11" }, ...]` (활성 언어만, sort_order 순. judge0_id 는 비노출)
+  - 제출/실행 시 비활성 언어는 **400 `UNSUPPORTED_LANGUAGE`**
+  - IDE 셀렉터는 이 API 를 쓰되, 프론트 자산(스타터 코드·하이라이트)이 없는 신규 코드는 걸러낸다
+  - 언어 추가 시: language 테이블 INSERT + 프론트 `src/constants/languages.ts`(스타터 코드)·`utils/highlight.ts`·`domain.ts` LanguageCode 유니온 동시 갱신
 
 ### 3.2 실행/제출 구분
 
@@ -631,6 +635,16 @@ IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 
 - `progress`(%) = 완료 테스트케이스 / 전체. Judge0 토큰별 콜백을 받아 카운트하면 자연 구현
 - 테스트 문제 시드: [icpc/na-rocky-mountain-2020-public](https://github.com/icpc/na-rocky-mountain-2020-public) (스펙 D)
 - 문제/테스트케이스 투입은 **어드민 UI 없이 seed 스크립트/마크다운·JSON 직접 투입** (B4 확정)
+
+### 3.3 채점 파이프라인 현황 (세션 C 구현분)
+
+- **테스트케이스**: `problem_testcase` 테이블(히든 포함, API 비노출) 우선, 없으면 공개 예제(problem_sample) 폴백.
+  히든 케이스 콘텐츠는 실제 문제 출제 시 문제별 투입(현 시드 문제는 데모 지문이라 예제 복사분만 존재)
+- **채점→랭킹**: 첫 ACCEPTED 시 `TierScore`(문제 티어 점수)를 시즌 랭킹(score/solved_count)에 가산,
+  누적 점수로 유저 티어 재계산(`TierCut` — 컷은 잠정, 운영 밸런싱 대상). 재정답·anonymous·비시즌 문제는 미반영
+- **judge0.client**: `stub`(기본, 무조건 정답) | `real`(RealJudge0Client 완비 — self-host 또는 RapidAPI).
+  ⚠ 이 개발 머신은 Docker Desktop 4.35 가 cgroup v1 스위치(DeprecatedCgroupv1)를 무시하는 회귀로
+  로컬 self-host 실채점 불가 — real 전환은 동작하는 Judge0 엔드포인트 확보 후 설정만 바꾸면 됨
 
 ---
 

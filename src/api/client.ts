@@ -3,6 +3,7 @@ import type {
   DiscussionCreateRequest,
   DiscussionPostDetail,
   DiscussionResponse,
+  LanguageInfo,
   MeResponse,
   NoticeDetail,
   NoticeRequest,
@@ -44,6 +45,9 @@ export interface ApiClient {
   getSeasonProblems(seasonId: number): Promise<ProblemSummary[]>
   getCurrentSeasonDetail(): Promise<SeasonDetailResponse>
   getProblem(problemId: string): Promise<ProblemDetail>
+
+  // ── 지원 언어 (요건 24) ──
+  getLanguages(): Promise<LanguageInfo[]>
 
   // ── IDE: 본문 열람(시점 기록)/실행/제출 ──
   openProblem(problemId: string): Promise<OpenProblemResponse>

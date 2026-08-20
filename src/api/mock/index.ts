@@ -1,5 +1,6 @@
 import { ApiError } from '../http'
 import type { ApiClient } from '../client'
+import { LANGUAGES } from '../../constants/languages'
 import type {
   DiscussionResponse,
   MeResponse,
@@ -189,6 +190,12 @@ export const mockApi: ApiClient = {
   async getProblem(problemId) {
     await delay()
     return problemDetailOf(problemId)
+  },
+
+  // ── 지원 언어 (요건 24 — 목은 상수 그대로) ──
+  async getLanguages() {
+    await delay(60)
+    return LANGUAGES.map(l => ({ ...l }))
   },
 
   // ── IDE ──

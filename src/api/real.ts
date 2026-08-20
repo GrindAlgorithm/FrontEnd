@@ -19,6 +19,8 @@ export const realApi: ApiClient = {
   getCurrentSeasonDetail: () => http.get('/seasons/current'),
   getProblem: problemId => http.get(`/problems/${encodeURIComponent(problemId)}`),
 
+  getLanguages: () => http.get('/languages'),
+
   openProblem: problemId => http.post(`/problems/${encodeURIComponent(problemId)}/open`),
   runCode: req => http.post('/runs', req),
   submit: req => http.post('/submissions', req),
