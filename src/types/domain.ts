@@ -53,6 +53,7 @@ export interface SignupRequest {
 export interface NoticeRequest {
   tag: string
   title: string
+  body: string // 마크다운 본문 (요건 3) — 제목만 있는 공지는 빈 문자열
   highlight: boolean
 }
 
@@ -114,6 +115,11 @@ export interface Notice {
   title: string
   publishedAt: string // ISO 8601
   highlight: boolean
+}
+
+/** 공지 상세 — 목록(Notice)에 마크다운 본문을 더한 형태 (GET /notices/{id}, 관리자 목록) */
+export interface NoticeDetail extends Notice {
+  body: string
 }
 
 export interface ActivityDay {
@@ -420,6 +426,18 @@ export interface DiscussionPost {
   commentCount: number
   voteCount: number
   createdAt: string
+}
+
+/** 토론 글 상세 — 목록(DiscussionPost)에 마크다운 본문을 더한 형태 (요건 4) */
+export interface DiscussionPostDetail extends DiscussionPost {
+  body: string
+}
+
+/** 토론 글 작성 요청 (POST /problems/{id}/discussions) — 정답자만 가능 */
+export interface DiscussionCreateRequest {
+  category: DiscussionCategory
+  title: string
+  body: string // 마크다운 본문
 }
 
 export interface DiscussionStats {

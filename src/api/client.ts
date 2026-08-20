@@ -1,8 +1,10 @@
 import type {
   DashboardResponse,
+  DiscussionCreateRequest,
+  DiscussionPostDetail,
   DiscussionResponse,
   MeResponse,
-  Notice,
+  NoticeDetail,
   NoticeRequest,
   OpenProblemResponse,
   ProblemDetail,
@@ -67,10 +69,15 @@ export interface ApiClient {
 
   // ── 토론 ──
   getDiscussions(problemId: string): Promise<DiscussionResponse>
+  getDiscussionPost(problemId: string, postId: number): Promise<DiscussionPostDetail>
+  createDiscussionPost(problemId: string, req: DiscussionCreateRequest): Promise<DiscussionPostDetail>
+
+  // ── 공지 상세 (본문 포함) ──
+  getNotice(id: number): Promise<NoticeDetail>
 
   // ── 관리자: 공지 CRUD (ADMIN 전용, /admin/notices) ──
-  adminListNotices(): Promise<Notice[]>
-  adminCreateNotice(req: NoticeRequest): Promise<Notice>
-  adminUpdateNotice(id: number, req: NoticeRequest): Promise<Notice>
+  adminListNotices(): Promise<NoticeDetail[]>
+  adminCreateNotice(req: NoticeRequest): Promise<NoticeDetail>
+  adminUpdateNotice(id: number, req: NoticeRequest): Promise<NoticeDetail>
   adminDeleteNotice(id: number): Promise<void>
 }

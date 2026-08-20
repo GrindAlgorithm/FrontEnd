@@ -35,6 +35,12 @@ const hybridApi: ApiClient = {
   getRanking: realApi.getRanking,
   // 부정행위 신호 배치 — 백엔드 수신·적재(§2.17) 구현 완료
   reportSolveEvents: realApi.reportSolveEvents,
+  // 토론 조회/작성/상세 (요건 4 구현 완료 — 정답자 한정)
+  getDiscussions: realApi.getDiscussions,
+  getDiscussionPost: realApi.getDiscussionPost,
+  createDiscussionPost: realApi.createDiscussionPost,
+  // 공지 상세 (요건 3 — 마크다운 body)
+  getNotice: realApi.getNotice,
   // 관리자 공지 CRUD (ADMIN 전용)
   adminListNotices: realApi.adminListNotices,
   adminCreateNotice: realApi.adminCreateNotice,

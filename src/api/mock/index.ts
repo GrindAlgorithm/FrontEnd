@@ -405,8 +405,45 @@ export const mockApi: ApiClient = {
       posts: DISCUSSION_POSTS,
     }
   },
+  async getDiscussionPost(_problemId, postId) {
+    await delay()
+    requireAuth()
+    const post = DISCUSSION_POSTS.find(p => p.id === postId)
+    if (!post) throw new ApiError(404, 'DISCUSSION_NOT_FOUND', '토론 글을 찾을 수 없습니다')
+    return { ...post }
+  },
+  async createDiscussionPost(problemId, req) {
+    await delay(200)
+    requireAuth()
+    const p = findProblem(problemId)
+    if (!p) throw new ApiError(404, 'PROBLEM_NOT_FOUND', `문제를 찾을 수 없습니다: ${problemId}`)
+    if (p.myStatus !== 'cleared') {
+      throw new ApiError(403, 'DISCUSSION_LOCKED', '문제를 풀어야 토론에 참여할 수 있습니다')
+    }
+    const post = {
+      id: Math.max(0, ...DISCUSSION_POSTS.map(x => x.id)) + 1,
+      category: req.category,
+      title: req.title,
+      body: req.body,
+      author: { handle: me.handle, tierName: 'platinum' as const },
+      commentCount: 0,
+      voteCount: 0,
+      createdAt: new Date().toISOString(),
+    }
+    DISCUSSION_POSTS.unshift(post)
+    return { ...post }
+  },
 
-  // ── 관리자: 공지 CRUD (목 — 메모리 상태) ──
+  // ── 공지 상세 ──
+  async getNotice(id) {
+    await delay()
+    requireAuth()
+    const notice = NOTICES.find(n => n.id === id)
+    if (!notice) throw new ApiError(404, 'NOTICE_NOT_FOUND', '공지를 찾을 수 없습니다')
+    return { ...notice }
+  },
+
+  // ── 관리자: 공지 CRUD (목 — 메모리 상태에 실제 반영) ──
   async adminListNotices() {
     await delay()
     requireAuth()
@@ -415,16 +452,23 @@ export const mockApi: ApiClient = {
   async adminCreateNotice(req) {
     await delay()
     requireAuth()
-    return { id: Date.now(), ...req, publishedAt: new Date().toISOString() }
+    const notice = { id: Math.max(0, ...NOTICES.map(n => n.id)) + 1, ...req, publishedAt: new Date().toISOString() }
+    NOTICES.unshift(notice)
+    return { ...notice }
   },
   async adminUpdateNotice(id, req) {
     await delay()
     requireAuth()
-    return { id, ...req, publishedAt: new Date().toISOString() }
+    const notice = NOTICES.find(n => n.id === id)
+    if (!notice) throw new ApiError(404, 'NOTICE_NOT_FOUND', '공지를 찾을 수 없습니다')
+    Object.assign(notice, req) // publishedAt 은 작성 시점 유지 (백엔드와 동일)
+    return { ...notice }
   },
-  async adminDeleteNotice() {
+  async adminDeleteNotice(id) {
     await delay()
     requireAuth()
+    const idx = NOTICES.findIndex(n => n.id === id)
+    if (idx >= 0) NOTICES.splice(idx, 1)
   },
 }
 

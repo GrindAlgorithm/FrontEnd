@@ -3,8 +3,9 @@ import { Navigate } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import { api } from '../api'
 import { useAuth } from '../context/AuthContext'
-import type { Notice } from '../types/domain'
+import type { NoticeDetail } from '../types/domain'
 import { C, fontStack } from '../theme'
+import { MarkdownEditor } from '../components/MarkdownEditor'
 
 /**
  * 관리자 탭 — 공지 관리(작성/수정/삭제). ADMIN 권한만 접근.
@@ -13,13 +14,14 @@ import { C, fontStack } from '../theme'
 export function AdminPage() {
   const { me } = useAuth()
 
-  const [notices, setNotices] = useState<Notice[]>([])
+  const [notices, setNotices] = useState<NoticeDetail[]>([])
   const [error, setError] = useState<string | null>(null)
 
   // 작성/수정 폼
   const [editingId, setEditingId] = useState<number | null>(null)
   const [tag, setTag] = useState('공지')
   const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
   const [highlight, setHighlight] = useState(false)
   const [pending, setPending] = useState(false)
 
@@ -42,6 +44,7 @@ export function AdminPage() {
     setEditingId(null)
     setTag('공지')
     setTitle('')
+    setBody('')
     setHighlight(false)
   }
 
@@ -51,9 +54,9 @@ export function AdminPage() {
     setError(null)
     try {
       if (editingId == null) {
-        await api.adminCreateNotice({ tag, title, highlight })
+        await api.adminCreateNotice({ tag, title, body, highlight })
       } else {
-        await api.adminUpdateNotice(editingId, { tag, title, highlight })
+        await api.adminUpdateNotice(editingId, { tag, title, body, highlight })
       }
       resetForm()
       await load()
@@ -64,10 +67,11 @@ export function AdminPage() {
     }
   }
 
-  const startEdit = (n: Notice) => {
+  const startEdit = (n: NoticeDetail) => {
     setEditingId(n.id)
     setTag(n.tag)
     setTitle(n.title)
+    setBody(n.body)
     setHighlight(n.highlight)
   }
 
@@ -134,6 +138,12 @@ export function AdminPage() {
             style={{ ...inputStyle, flex: 1 }}
           />
         </div>
+        <MarkdownEditor
+          value={body}
+          onChange={setBody}
+          placeholder="본문 (마크다운, 비워두면 제목만 있는 공지)"
+          minHeight={180}
+        />
         <label style={{ fontSize: 13, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
           <input type="checkbox" checked={highlight} onChange={e => setHighlight(e.target.checked)} />
           상단 강조(highlight)

@@ -349,9 +349,12 @@ export function HomePage() {
                   >
                     [{n.tag}]
                   </span>
-                  <span style={{ color: C.blue, cursor: 'pointer', flex: 1, lineHeight: 1.5 }}>
+                  <Link
+                    to={`/notices/${n.id}`}
+                    style={{ color: C.blue, textDecoration: 'none', flex: 1, lineHeight: 1.5 }}
+                  >
                     {n.title}
-                  </span>
+                  </Link>
                 </li>
               ))}
             </ul>

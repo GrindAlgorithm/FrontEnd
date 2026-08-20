@@ -42,6 +42,12 @@ export const realApi: ApiClient = {
 
   getDiscussions: problemId =>
     http.get(`/problems/${encodeURIComponent(problemId)}/discussions`),
+  getDiscussionPost: (problemId, postId) =>
+    http.get(`/problems/${encodeURIComponent(problemId)}/discussions/${postId}`),
+  createDiscussionPost: (problemId, req) =>
+    http.post(`/problems/${encodeURIComponent(problemId)}/discussions`, req),
+
+  getNotice: id => http.get(`/notices/${id}`),
 
   // ── 관리자: 공지 CRUD (ADMIN 전용) ──
   adminListNotices: () => http.get('/admin/notices'),

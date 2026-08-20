@@ -220,7 +220,9 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 - `nearbyRanking` — 내 순위 ±2 (총 5행 내외), `isMe` 플래그 필수
 - `season.nextProblemId` — "다음 시즌 문제 풀기" 버튼이 IDE로 직행하는 대상. 전부 클리어 시 `null`
 - `seasonActivity.days` — **과거→오늘 순서**, 시즌 시작일부터(최대 12주). `level` 0~4는 백엔드가 산정(잔디 강도)
-- `notices` — MVP는 별도 공지 CRUD 없이 시드 데이터 허용 (어드민 Deferred B4)
+- `notices` — 관리자 CRUD(`/admin/notices`, ADMIN 전용)로 관리 (요건 3 구현 완료). 목록에는 body 를 내리지 않는다
+  - **공지 상세**: `GET /notices/{noticeId}` → Notice + `body`(마크다운 원문, 빈 문자열 허용). 404 `NOTICE_NOT_FOUND`
+  - 관리자 목록/작성/수정 응답은 body 포함(수정 폼용). 요청 바디: `{ tag, title, body, highlight }` (body ≤ 20,000자, 렌더링은 프론트 `components/Markdown.tsx` 서브셋)
 
 ### 2.5 `GET /seasons` — 시즌 목록 (문제 화면 탭)
 
@@ -476,7 +478,12 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 - 접근 판정: **해당 문제 Accepted 이력 보유** 여부
 - `category`: `'code_review' | 'solution'` 두 축만 (Out of Scope: 문제별 질문 탭 — 전역 Q&A로 이관, "일반 문제만 Q&A 구현"은 D항목 협의 필요)
 - `author.tierName` — 레벨 없이 티어명만 (작성자 옆 색 점 표시용)
-- **글 작성/글 상세/댓글은 Deferred** — 프론트도 버튼만 있고 동작 없음. 우선순위 올라오면 `POST /problems/{id}/discussions` 등 협의
+- **글 작성/상세는 요건 4 로 구현 완료** (댓글/투표는 여전히 Deferred — 카운트만 노출):
+  - `POST /problems/{problemId}/discussions` — 요청 `{ "category": "code_review|solution", "title", "body" }`
+    (title ≤ 255자, body ≤ 20,000자 마크다운). 응답: 아래 글 상세와 동일. 미해결 유저는 **403 `DISCUSSION_LOCKED`**
+  - `GET /problems/{problemId}/discussions/{postId}` — 글 상세. posts[] 항목 + `body`(마크다운 원문).
+    미해결 403 `DISCUSSION_LOCKED` / 없는 글 404 `DISCUSSION_NOT_FOUND`
+  - 작성자 티어 스냅샷: 현재 시즌 랭킹 기준, 미배치면 `bronze`
 
 ### 2.15 `GET /users/{handle}` — 유저 프로필
 

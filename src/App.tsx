@@ -5,6 +5,8 @@ import { HomePage } from './pages/HomePage'
 import { ProblemsPage } from './pages/ProblemsPage'
 import { ProblemDetailPage } from './pages/ProblemDetailPage'
 import { DiscussionPage } from './pages/DiscussionPage'
+import { DiscussionPostPage } from './pages/DiscussionPostPage'
+import { NoticePage } from './pages/NoticePage'
 import { IDEPage } from './pages/IDEPage'
 import { RankingPage } from './pages/RankingPage'
 import { SeasonPage } from './pages/SeasonPage'
@@ -23,6 +25,8 @@ export default function App() {
           <Route path="/problems" element={<ProblemsPage />} />
           <Route path="/problems/:problemId" element={<ProblemDetailPage />} />
           <Route path="/problems/:problemId/discussion" element={<DiscussionPage />} />
+          <Route path="/problems/:problemId/discussion/:postId" element={<DiscussionPostPage />} />
+          <Route path="/notices/:noticeId" element={<NoticePage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/season" element={<SeasonPage />} />
           <Route path="/users/:handle" element={<ProfilePage />} />

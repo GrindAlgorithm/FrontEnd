@@ -2,10 +2,10 @@ import type {
   ActivityCalendar,
   ActivityDay,
   DecayWarning,
-  DiscussionPost,
+  DiscussionPostDetail,
   MeResponse,
   NearbyRankingEntry,
-  Notice,
+  NoticeDetail,
   PastSeasonRow,
   ProblemBody,
   ProblemSummary,
@@ -209,10 +209,16 @@ export const NEARBY: NearbyRankingEntry[] = [
   { rank: 6, handle: 'java_kim', tier: tier('platinum', 'IV'), weeklyDelta: 5, isMe: false },
 ]
 
-export const NOTICES: Notice[] = [
-  { id: 3, tag: '공지', title: 'Season 2 시작 · 시즌 문제 15개 공개', publishedAt: '2026-07-01T00:00:00+09:00', highlight: true },
-  { id: 2, tag: '공지', title: '채점 서버 점검 안내 (5/30 02:00~04:00)', publishedAt: daysAgo(4), highlight: false },
-  { id: 1, tag: '업데이트', title: 'Java 17 지원 추가', publishedAt: daysAgo(7), highlight: false },
+export const NOTICES: NoticeDetail[] = [
+  {
+    id: 3, tag: '공지', title: 'Season 2 시작 · 시즌 문제 15개 공개', publishedAt: '2026-07-01T00:00:00+09:00', highlight: true,
+    body: '## Season 2 시작\n\nSeason 2 가 시작되었습니다. 이번 시즌에는 **시즌 문제 15개**가 공개됩니다.\n\n- 기간: 7/1 ~ 9/30\n- 티어/점수는 시즌 시작과 함께 초기화됩니다\n- 리워드 조건은 시즌 탭에서 확인하세요',
+  },
+  {
+    id: 2, tag: '공지', title: '채점 서버 점검 안내 (5/30 02:00~04:00)', publishedAt: daysAgo(4), highlight: false,
+    body: '점검 시간 동안 제출이 일시 중단됩니다.\n\n- 일시: 5/30 02:00 ~ 04:00\n- 영향: 코드 실행/제출 불가 (열람은 가능)',
+  },
+  { id: 1, tag: '업데이트', title: 'Java 17 지원 추가', publishedAt: daysAgo(7), highlight: false, body: '' },
 ]
 
 // ── 잔디 생성 (와이어프레임의 sin 기반 의사난수 이관) ────────
@@ -320,11 +326,11 @@ export const PAST_SEASONS: PastSeasonRow[] = [
 
 // ── 토론 ─────────────────────────────────────────────────────
 
-export const DISCUSSION_POSTS: DiscussionPost[] = [
-  { id: 6, category: 'code_review', title: 'O(N²) 풀이 공유합니다 — 시간복잡도 개선 의견 받아요', author: { handle: 'algo_lover', tierName: 'platinum' }, commentCount: 12, voteCount: 24, createdAt: hoursAgo(2) },
-  { id: 5, category: 'solution', title: '시뮬레이션 + BFS 조합으로 풀었습니다', author: { handle: 'park_master', tierName: 'diamond' }, commentCount: 8, voteCount: 41, createdAt: hoursAgo(5) },
-  { id: 4, category: 'solution', title: 'BFS 시작점 처리 — 다들 어떻게 푸셨나요?', author: { handle: 'newbie01', tierName: 'silver' }, commentCount: 5, voteCount: 3, createdAt: hoursAgo(8) },
-  { id: 3, category: 'code_review', title: 'Java로 풀이 — 가독성 개선 부탁드립니다', author: { handle: 'java_kim', tierName: 'gold' }, commentCount: 6, voteCount: 12, createdAt: hoursAgo(12) },
-  { id: 2, category: 'solution', title: 'Python 88ms 풀이 — 최적화 팁', author: { handle: 'cs_student', tierName: 'platinum' }, commentCount: 22, voteCount: 67, createdAt: daysAgo(1) },
-  { id: 1, category: 'solution', title: '회전 처리 시 4방향 우선순위 어떻게 잡으시나요?', author: { handle: 'kim_dev', tierName: 'platinum' }, commentCount: 3, voteCount: 7, createdAt: daysAgo(2) },
+export const DISCUSSION_POSTS: DiscussionPostDetail[] = [
+  { id: 6, category: 'code_review', title: 'O(N²) 풀이 공유합니다 — 시간복잡도 개선 의견 받아요', author: { handle: 'algo_lover', tierName: 'platinum' }, commentCount: 12, voteCount: 24, createdAt: hoursAgo(2), body: '단순 이중 루프로 풀었는데 시간이 아슬아슬합니다.\n\n```\nfor i in range(n):\n    for j in range(n):\n        ...\n```\n\n스위핑으로 줄일 수 있을까요?' },
+  { id: 5, category: 'solution', title: '시뮬레이션 + BFS 조합으로 풀었습니다', author: { handle: 'park_master', tierName: 'diamond' }, commentCount: 8, voteCount: 41, createdAt: hoursAgo(5), body: '핵심은 **회전 후 즉시 중력 처리**입니다.\n\n1. 그룹 탐색은 BFS\n2. 회전은 90도 배열 변환\n3. 중력은 열 단위로 아래부터 채우기' },
+  { id: 4, category: 'solution', title: 'BFS 시작점 처리 — 다들 어떻게 푸셨나요?', author: { handle: 'newbie01', tierName: 'silver' }, commentCount: 5, voteCount: 3, createdAt: hoursAgo(8), body: '시작점을 무지개 블록으로 잡으면 중복 방문 처리가 꼬이는데, 다들 어떻게 처리하셨는지 궁금합니다.' },
+  { id: 3, category: 'code_review', title: 'Java로 풀이 — 가독성 개선 부탁드립니다', author: { handle: 'java_kim', tierName: 'gold' }, commentCount: 6, voteCount: 12, createdAt: hoursAgo(12), body: '동작은 하는데 메서드가 너무 깁니다. 분리 기준에 대한 의견 부탁드립니다.' },
+  { id: 2, category: 'solution', title: 'Python 88ms 풀이 — 최적화 팁', author: { handle: 'cs_student', tierName: 'platinum' }, commentCount: 22, voteCount: 67, createdAt: daysAgo(1), body: '`sys.stdin.readline` + 방문 배열 재사용으로 88ms 까지 줄였습니다.' },
+  { id: 1, category: 'solution', title: '회전 처리 시 4방향 우선순위 어떻게 잡으시나요?', author: { handle: 'kim_dev', tierName: 'platinum' }, commentCount: 3, voteCount: 7, createdAt: daysAgo(2), body: '문제 조건상 반시계 회전인데 좌표 변환 공식을 자꾸 헷갈립니다. 정리해 두신 분 있나요?' },
 ]
