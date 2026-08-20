@@ -23,6 +23,8 @@ const hybridApi: ApiClient = {
   getSeasons: realApi.getSeasons,
   getSeason: realApi.getSeason,
   getSeasonProblems: realApi.getSeasonProblems,
+  // 시즌 화면 통합 응답 — 진행률/리워드/지난 시즌 (백엔드 §2.5-c 구현 완료)
+  getCurrentSeasonDetail: realApi.getCurrentSeasonDetail,
   getProblem: realApi.getProblem,
   openProblem: realApi.openProblem,
   // runCode: 목 유지 — 로컬 Judge0(isolate)가 cgroup v1 부재로 채점 불가라
@@ -31,6 +33,8 @@ const hybridApi: ApiClient = {
   getSubmission: realApi.getSubmission,
   listSubmissions: realApi.listSubmissions,
   getRanking: realApi.getRanking,
+  // 부정행위 신호 배치 — 백엔드 수신·적재(§2.17) 구현 완료
+  reportSolveEvents: realApi.reportSolveEvents,
   // 관리자 공지 CRUD (ADMIN 전용)
   adminListNotices: realApi.adminListNotices,
   adminCreateNotice: realApi.adminCreateNotice,
@@ -48,7 +52,7 @@ if (mode !== 'false') {
   // eslint-disable-next-line no-console
   console.info(
     mode === 'hybrid'
-      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌/문제목록/문제상세/문제풀기(IDE)/제출/채점현황/랭킹은 백엔드(:8080), 코드 실행과 나머지는 목'
+      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌(상세 포함)/문제목록/문제상세/문제풀기(IDE)/제출/채점현황/랭킹/무결성 신호는 백엔드(:8080), 코드 실행과 나머지는 목'
       : '[GrindAlgorithm] 목 API 모드로 실행 중 — .env의 VITE_USE_MOCK=hybrid|false 로 백엔드 연동',
   )
 }

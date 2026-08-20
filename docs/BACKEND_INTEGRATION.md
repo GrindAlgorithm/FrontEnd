@@ -20,8 +20,8 @@
   - 엔드포인트(경로/메서드): `src/api/real.ts` + 인터페이스 `src/api/client.ts`
   - 이 문서와 위 파일은 1:1 — 한쪽을 바꾸면 반드시 같이 갱신
 - API 모드(`.env`의 `VITE_USE_MOCK`): `true`=전부 목 / `hybrid`=백엔드 구현분(현재
-  §2.4 대시보드, §2.5·2.5-b·2.6 시즌, §2.7 문제 상세, §2.8 본문 열람, §2.9 실행,
-  §2.10~2.12 제출·채점, §2.13 랭킹)만 실서버, 나머지 목 / `false`=전부 실서버.
+  §2.4 대시보드, §2.5·2.5-b·2.5-c·2.6 시즌, §2.7 문제 상세, §2.8 본문 열람, §2.9 실행,
+  §2.10~2.12 제출·채점, §2.13 랭킹, §2.17 무결성 신호)만 실서버, 나머지 목 / `false`=전부 실서버.
   백엔드 엔드포인트가 추가되면 `src/api/index.ts`의 `hybridApi`에 한 줄씩 옮긴다
 - dev 프록시(`vite.config.ts`): `/api`, `/oauth2`, `/login/oauth2` → `http://localhost:8080`
 
@@ -242,7 +242,31 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 { "id": 2, "name": "Season 2", "startDate": "2026-07-01", "endDate": "2026-09-30", "status": "current", "dDay": 72 }
 ```
 - 없는 시즌이면 실패 봉투(`resultCode` ≠ `0000`)
-- ⚠ 시즌 화면이 쓰는 `GET /seasons/current`와 **다른 엔드포인트**다. 이쪽은 기간 정보만, 저쪽은 진행률·챌린지·리워드까지 (`/seasons/current`는 아직 백엔드 미구현 = 목)
+- ⚠ 시즌 화면이 쓰는 `GET /seasons/current`(§2.5-c)와 **다른 엔드포인트**다. 이쪽은 기간 정보만, 저쪽은 진행률·챌린지·리워드까지
+
+### 2.5-c `GET /seasons/current` — 시즌 화면 통합 응답
+
+시즌 탭 전용. 현재 시즌의 기간 진행률 + 문제 목록(내 진행 상태 포함) + 리워드 달성 현황 + 지난 시즌 챔피언.
+
+**200**
+```json
+{
+  "season": { "id": 2, "name": "Season 2", "startDate": "2026-07-01", "endDate": "2026-09-30", "status": "current", "dDay": 41 },
+  "progressRatio": 0.55,
+  "problems": [ { "...§2.6 항목과 동일 구조..." } ],
+  "rewards": [
+    { "id": "s2_champion", "name": "S2 챔피언", "colorKey": "gold", "condition": "시즌 종료 시 1위", "achieved": false, "progressText": "진행중 (4위)" }
+  ],
+  "pastSeasons": [
+    { "id": 1, "name": "Season 1", "periodText": "4/1 ~ 6/30", "champion": { "handle": "algo_god", "tier": { "name": "diamond", "level": "II" } } }
+  ]
+}
+```
+- `progressRatio` — **시즌 기간 경과 비율**(0~1). §2.4 대시보드의 `season.progressRatio`(클리어 비율)와 다르다
+- `rewards[].achieved`/`progressText` — 조회 유저 기준 계산값. 리워드 정의는 `season_reward` 시드(어드민 Deferred B4).
+  조건 유형: 1위(CHAMPION) / 다이아 도달 / 전체 클리어 / N개 클리어 / 시즌 중 N문제 풀이 — `RewardConditionType`
+- `pastSeasons[].champion` — 해당 시즌 랭킹(점수 내림차순) 1위. 랭킹이 없는 시즌은 목록에서 제외
+- 진행 중인 시즌이 없으면 실패 봉투(`resultCode` ≠ `0000`)
 
 ### 2.6 `GET /seasons/{seasonId}/problems` — 시즌 문제 목록
 
@@ -526,7 +550,10 @@ IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 
   }
 }
 ```
-**204** — 본문 불필요. 프론트는 응답을 쓰지 않는다(sendBeacon 경로는 응답을 받을 수도 없음).
+**200** — 공통 봉투(`result: null`). 프론트는 응답을 쓰지 않는다(sendBeacon 경로는 응답을 받을 수도 없음).
+알 수 없는 세션의 배치는 **성공 응답 + 서버 로그 후 폐기** — 실패 응답을 주면 프론트 큐가 무한 재시도하기 때문.
+백엔드 구현: `integrity` 패키지 — 이벤트는 `solve_event` append-only, 요약은 `solve_session_summary` 세션당 1행 갱신.
+상한: 배치당 200건(프론트 큐 상한과 동일) / 세션당 2,000건 — 초과분은 잘라내고 로그.
 
 **이벤트 종류**
 
@@ -623,7 +650,7 @@ IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 
 |---|---|---|
 | A1 점수/티어/하락 공식 | 점수=고정(확정), 하락=추후 개발 | `decay` null 운용 → 구현 시 채움. 티어 컷 절댓값. **챌린저(100명)** 확정 시 `TierRank.name`에 `'challenger'` 추가 + 프론트 색상/라벨 추가 필요 |
 | A2 시즌 주기 | **6개월**(스펙 red) vs 와이어프레임 3개월 | 날짜는 전부 서버 응답 기준이라 코드 영향 없음. 시즌 시드만 정확히 |
-| A3 부정행위 탐지 | 본문 IDE-only 확정, **클라이언트 신호 수집 구현 완료**, 판정·제재 기준 미확정 | `POST /solve-sessions/{id}/events` **구현됨**(§2.17) — 9종 신호 + 세션 요약 배치 전송. 백엔드는 수신·저장만 하면 되고, **어느 점수부터 어떤 조치를 할지는 운영 결정 대기**. 캠 감독·IP/기기 지문은 여전히 범위 밖 |
+| A3 부정행위 탐지 | 본문 IDE-only 확정, 클라이언트 신호 수집 + **백엔드 수신·적재 구현 완료**, 판정·제재 기준 미확정 | `POST /solve-sessions/{id}/events` 양쪽 구현됨(§2.17) — 서버는 `solve_event`/`solve_session_summary`에 적재까지만. **어느 점수부터 어떤 조치를 할지는 운영 결정 대기**. 캠 감독·IP/기기 지문은 여전히 범위 밖 |
 | A4 칭호 발급 규칙 | 골드 이상부터 발급(확정), 조건 상세 미정 | 발급=백엔드 배치/이벤트. API는 `titles[]`로 충분 |
 | B4 어드민 | DEFERRED | 문제/TC/시즌/칭호 투입 전부 seed 스크립트. 어드민 API 불필요(MVP) |
 | C3 KPI | "정의 사항 개발 + 랜딩 페이지" | **비로그인 랜딩 페이지는 Deferred 목록에도 있음** — 충돌. 현재 프론트는 로그인 화면이 비로그인 진입점. 랜딩 확정 시 별도 페이지 추가 |
