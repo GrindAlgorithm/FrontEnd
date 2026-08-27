@@ -87,21 +87,6 @@ export function LandingPage() {
         }}
       >
         <div className="container">
-          <div
-            style={{
-              display: 'inline-block',
-              fontSize: 12,
-              fontWeight: 600,
-              color: C.accent,
-              border: `1px solid ${C.accent}`,
-              padding: '3px 10px',
-              marginBottom: 16,
-              letterSpacing: 0.5,
-              fontFamily: monoStack,
-            }}
-          >
-            시즌제 알고리즘 트레이닝
-          </div>
           <h1
             style={{
               fontSize: 34,
