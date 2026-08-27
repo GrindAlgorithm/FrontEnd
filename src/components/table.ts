@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { C } from '../theme'
+import { C, monoStack } from '../theme'
 
 // 와이어프레임 공통 표 스타일 — 진한 상단 보더 + 옅은 행 구분선
 
@@ -10,6 +10,9 @@ export const tableStyle: CSSProperties = {
 }
 
 export const theadRowStyle: CSSProperties = {
+  background: C.surfaceAlt,
+  fontFamily: monoStack,
+  fontSize: 12,
   borderTop: `2px solid ${C.text}`,
   borderBottom: `1px solid ${C.border}`,
 }

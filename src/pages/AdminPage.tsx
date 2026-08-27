@@ -4,7 +4,7 @@ import type { FormEvent } from 'react'
 import { api } from '../api'
 import { useAuth } from '../context/AuthContext'
 import type { NoticeDetail } from '../types/domain'
-import { C, fontStack } from '../theme'
+import { C, fontStack, monoStack } from '../theme'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 
 /**
@@ -88,7 +88,9 @@ export function AdminPage() {
   }
 
   const inputStyle = {
+    background: C.bg,
     border: `1px solid ${C.border}`,
+    color: C.text,
     padding: '8px 10px',
     fontSize: 13,
     fontFamily: fontStack,
@@ -98,7 +100,9 @@ export function AdminPage() {
 
   return (
     <div className="container" style={{ maxWidth: 760, margin: '32px auto' }}>
-      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>관리자 · 공지 관리</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
+        <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>관리자 · 공지 관리
+      </h1>
       <p style={{ fontSize: 13, color: C.muted, marginBottom: 24 }}>
         공지를 작성·수정·삭제합니다. 저장한 공지는 홈 대시보드에 노출됩니다.
       </p>
@@ -111,6 +115,7 @@ export function AdminPage() {
       <form
         onSubmit={submit}
         style={{
+          background: C.surface,
           border: `1px solid ${C.border}`,
           padding: 16,
           marginBottom: 28,
@@ -153,9 +158,9 @@ export function AdminPage() {
             type="submit"
             disabled={pending}
             style={{
-              background: C.blue,
-              color: '#fff',
-              border: 'none',
+              background: 'transparent',
+              color: C.accent,
+              border: `1px solid ${C.accent}`,
               padding: '8px 16px',
               fontSize: 13,
               fontWeight: 600,
@@ -194,6 +199,7 @@ export function AdminPage() {
           <div
             key={n.id}
             style={{
+              background: C.surface,
               border: `1px solid ${C.borderLight}`,
               padding: '10px 14px',
               display: 'flex',
@@ -201,7 +207,17 @@ export function AdminPage() {
               gap: 12,
             }}
           >
-            <span style={{ fontSize: 12, color: C.blue, fontWeight: 600, minWidth: 56 }}>{n.tag}</span>
+            <span
+              style={{
+                fontSize: 12,
+                color: C.accent,
+                fontWeight: 600,
+                minWidth: 56,
+                fontFamily: monoStack,
+              }}
+            >
+              {n.tag}
+            </span>
             <span style={{ flex: 1, fontSize: 14 }}>
               {n.highlight && <span style={{ color: C.red, marginRight: 4 }}>★</span>}
               {n.title}

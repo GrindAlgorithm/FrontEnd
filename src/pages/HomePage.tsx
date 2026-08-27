@@ -13,7 +13,7 @@ import { formatShortDate, toJandiWeeks } from '../utils/format'
 import type { RecommendReason } from '../types/domain'
 
 function reasonColor(r: RecommendReason): string {
-  if (r === 'tier_up') return C.blue
+  if (r === 'tier_up') return C.accent
   if (r === 'weak_area') return C.red
   return C.muted
 }
@@ -48,7 +48,7 @@ export function HomePage() {
           <div>
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 4 }}>안녕하세요,</div>
             <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>
-              <Link to={`/users/${me?.handle}`}>
+              <Link to={`/users/${me?.handle}`} style={{ fontFamily: monoStack }}>
                 {me?.handle}{' '}
                 <span style={{ color: C.muted, fontSize: 13, fontWeight: 400 }}>님</span>
               </Link>
@@ -68,9 +68,9 @@ export function HomePage() {
                 시즌 티어
               </div>
               {me?.seasonTier && <Tier tier={me.seasonTier} />}
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 4, fontFamily: monoStack }}>
                 {me?.seasonScore.toLocaleString()}점 ·{' '}
-                <Link to="/ranking" style={{ color: C.blue }}>
+                <Link to="/ranking" style={{ color: C.accent }}>
                   {me?.seasonRank}위
                 </Link>
               </div>
@@ -96,18 +96,20 @@ export function HomePage() {
                 marginBottom: 10,
               }}
             >
-              <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>오늘의 추천</h2>
-              <Link to="/problems" style={{ fontSize: 12, color: C.blue }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>
+                <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>오늘의 추천
+              </h2>
+              <Link to="/problems" style={{ fontSize: 12, color: C.accent }}>
                 전체 문제 →
               </Link>
             </div>
             <table style={tableStyle}>
               <thead>
-                <tr style={theadRowStyle}>
-                  <th style={th({ padding: '8px 6px', width: 60 })}>번호</th>
-                  <th style={th({ padding: '8px 6px' })}>제목</th>
-                  <th style={th({ padding: '8px 6px', width: 110 })}>난이도</th>
-                  <th style={th({ padding: '8px 6px', width: 130 })}>추천 이유</th>
+                <tr style={{ ...theadRowStyle, background: C.surfaceAlt }}>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px', width: 60 })}>번호</th>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px' })}>제목</th>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px', width: 110 })}>난이도</th>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px', width: 130 })}>추천 이유</th>
                 </tr>
               </thead>
               <tbody>
@@ -117,7 +119,7 @@ export function HomePage() {
                       {p.displayNo}
                     </td>
                     <td style={td({ padding: '8px 6px' })}>
-                      <Link to={`/problems/${p.problemId}`} style={{ color: C.blue }}>
+                      <Link to={`/problems/${p.problemId}`} style={{ color: C.accent }}>
                         {p.title}
                       </Link>
                     </td>
@@ -150,33 +152,35 @@ export function HomePage() {
                 marginBottom: 10,
               }}
             >
-              <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>내 주변 순위</h2>
-              <Link to="/ranking" style={{ fontSize: 12, color: C.blue }}>
+              <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>
+                <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>내 주변 순위
+              </h2>
+              <Link to="/ranking" style={{ fontSize: 12, color: C.accent }}>
                 전체 랭킹 →
               </Link>
             </div>
             <table style={tableStyle}>
               <thead>
-                <tr style={theadRowStyle}>
-                  <th style={th({ padding: '8px 6px', textAlign: 'right', width: 60 })}>순위</th>
-                  <th style={th({ padding: '8px 6px' })}>아이디</th>
-                  <th style={th({ padding: '8px 6px', width: 110 })}>시즌 티어</th>
-                  <th style={th({ padding: '8px 6px', textAlign: 'right', width: 80 })}>7일 변동</th>
+                <tr style={{ ...theadRowStyle, background: C.surfaceAlt }}>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px', textAlign: 'right', width: 60 })}>순위</th>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px' })}>아이디</th>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px', width: 110 })}>시즌 티어</th>
+                  <th style={th({ fontFamily: monoStack, fontSize: 12, padding: '8px 6px', textAlign: 'right', width: 80 })}>7일 변동</th>
                 </tr>
               </thead>
               <tbody>
                 {d.nearbyRanking.map(f => (
                   <tr
                     key={f.rank}
-                    style={{ ...bodyRowStyle, background: f.isMe ? C.bg : 'transparent' }}
+                    style={{ ...bodyRowStyle, background: f.isMe ? C.surfaceAlt : 'transparent' }}
                   >
-                    <td style={td({ padding: '8px 6px', ...numCell, color: C.muted })}>
+                    <td style={td({ padding: '8px 6px', ...numCell, fontFamily: monoStack, color: C.muted })}>
                       {f.rank.toLocaleString()}
                     </td>
                     <td style={td({ padding: '8px 6px' })}>
                       <Link
                         to={`/users/${f.handle}`}
-                        style={{ color: C.blue, fontWeight: f.isMe ? 700 : 400 }}
+                        style={{ color: C.accent, fontFamily: monoStack, fontWeight: f.isMe ? 700 : 400 }}
                       >
                         {f.handle}{' '}
                         {f.isMe && (
@@ -191,6 +195,7 @@ export function HomePage() {
                       style={td({
                         padding: '8px 6px',
                         ...numCell,
+                        fontFamily: monoStack,
                         fontSize: 12,
                         fontWeight: 600,
                         color: f.weeklyDelta > 0 ? C.green : f.weeklyDelta < 0 ? C.red : C.muted,
@@ -213,7 +218,7 @@ export function HomePage() {
         <aside>
           {/* 시즌 진행 */}
           <section
-            style={{ marginBottom: 28, border: `1px solid ${C.border}`, padding: 14, background: C.bg }}
+            style={{ marginBottom: 28, border: `1px solid ${C.border}`, padding: 14, background: C.surface }}
           >
             <div
               style={{
@@ -224,7 +229,9 @@ export function HomePage() {
               }}
             >
               <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{d.season.name}</h2>
-              <span style={{ fontSize: 11, color: C.red, fontWeight: 700 }}>D-{d.season.dDay}</span>
+              <span style={{ fontSize: 11, color: C.red, fontWeight: 700, fontFamily: monoStack }}>
+                D-{d.season.dDay}
+              </span>
             </div>
             <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>
               {formatShortDate(d.season.startDate)} ~ {formatShortDate(d.season.endDate)}
@@ -234,7 +241,6 @@ export function HomePage() {
               style={{
                 height: 4,
                 background: C.borderLight,
-                borderRadius: 2,
                 overflow: 'hidden',
                 marginBottom: 14,
               }}
@@ -243,7 +249,7 @@ export function HomePage() {
                 style={{
                   height: '100%',
                   width: `${Math.round(d.season.progressRatio * 100)}%`,
-                  background: C.blue,
+                  background: C.accent,
                 }}
               />
             </div>
@@ -251,7 +257,7 @@ export function HomePage() {
             <div style={{ paddingTop: 12, borderTop: `1px solid ${C.borderLight}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                 <span style={{ fontSize: 12, color: C.muted }}>시즌 문제</span>
-                <span style={{ fontSize: 12, fontWeight: 700 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, fontFamily: monoStack }}>
                   {d.season.solvedCount}{' '}
                   <span style={{ color: C.muted, fontWeight: 400 }}>/ {d.season.totalCount}</span>
                 </span>
@@ -260,9 +266,9 @@ export function HomePage() {
                 onClick={goNextProblem}
                 style={{
                   width: '100%',
-                  background: C.blue,
-                  color: '#fff',
-                  border: 'none',
+                  background: 'transparent',
+                  color: C.accent,
+                  border: `1px solid ${C.accent}`,
                   padding: '8px 12px',
                   fontSize: 12,
                   cursor: 'pointer',
@@ -274,7 +280,7 @@ export function HomePage() {
                 다음 시즌 문제 풀기 →
               </button>
               <div style={{ textAlign: 'center', marginTop: 8 }}>
-                <Link to="/season" style={{ fontSize: 11, color: C.blue }}>
+                <Link to="/season" style={{ fontSize: 11, color: C.accent }}>
                   시즌 상세 보기
                 </Link>
               </div>
@@ -292,7 +298,7 @@ export function HomePage() {
                 borderBottom: `1px solid ${C.border}`,
               }}
             >
-              이번 주
+              <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>이번 주
             </h2>
             <table style={tableStyle}>
               <tbody>
@@ -308,6 +314,7 @@ export function HomePage() {
                       style={td({
                         padding: '6px 4px',
                         ...numCell,
+                        fontFamily: monoStack,
                         fontWeight: 600,
                         color: v.startsWith('+') ? C.green : C.text,
                       })}
@@ -331,7 +338,7 @@ export function HomePage() {
                 borderBottom: `1px solid ${C.border}`,
               }}
             >
-              공지
+              <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>공지
             </h2>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {d.notices.map(n => (
@@ -344,6 +351,7 @@ export function HomePage() {
                       fontSize: 10,
                       color: n.highlight ? C.red : C.muted,
                       fontWeight: 600,
+                      fontFamily: monoStack,
                       minWidth: 40,
                     }}
                   >
@@ -351,7 +359,7 @@ export function HomePage() {
                   </span>
                   <Link
                     to={`/notices/${n.id}`}
-                    style={{ color: C.blue, textDecoration: 'none', flex: 1, lineHeight: 1.5 }}
+                    style={{ color: C.accent, textDecoration: 'none', flex: 1, lineHeight: 1.5 }}
                   >
                     {n.title}
                   </Link>
@@ -372,10 +380,12 @@ export function HomePage() {
             marginBottom: 10,
           }}
         >
-          <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>이번 시즌 활동</h2>
+          <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>이번 시즌 활동
+          </h2>
           <span style={{ fontSize: 11, color: C.muted }}>
             {d.seasonActivity.activeDays}일 활동 · 평균 {d.seasonActivity.avgPerDay}문제/일 ·{' '}
-            <Link to={`/users/${me?.handle}`} style={{ color: C.blue }}>
+            <Link to={`/users/${me?.handle}`} style={{ color: C.accent }}>
               1년 활동 보기 →
             </Link>
           </span>

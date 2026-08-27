@@ -22,8 +22,9 @@ export function DecayBanner({
   return (
     <div
       style={{
-        border: `1px solid ${C.red}`,
-        background: '#fff5f5',
+        border: `1px solid ${C.amber}`,
+        background: C.amberBg,
+        color: C.text,
         padding: '10px 14px',
         marginBottom: 24,
         fontSize: 13,
@@ -32,7 +33,7 @@ export function DecayBanner({
         gap: 10,
       }}
     >
-      <span style={{ color: C.red, fontSize: 16, fontWeight: 700 }}>⚠</span>
+      <span style={{ color: C.amber, fontSize: 16, fontWeight: 700 }}>⚠</span>
       {variant === 'home' ? (
         <>
           <span style={{ flex: 1 }}>
@@ -44,9 +45,9 @@ export function DecayBanner({
             <button
               onClick={onAction}
               style={{
-                background: C.red,
-                color: '#fff',
-                border: 'none',
+                background: 'transparent',
+                color: C.amber,
+                border: `1px solid ${C.amber}`,
                 padding: '5px 14px',
                 fontSize: 12,
                 cursor: 'pointer',

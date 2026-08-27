@@ -13,7 +13,7 @@ import type { ProblemStatus, SeasonSummary } from '../types/domain'
 
 const STATUS_BADGE: Record<ProblemStatus, { label: string; color: string }> = {
   cleared: { label: '✓ 클리어', color: C.green },
-  wip: { label: '시도중', color: C.blue },
+  wip: { label: '시도중', color: C.accent },
   untried: { label: '—', color: C.muted },
 }
 
@@ -31,7 +31,9 @@ export function ProblemsPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px' }}>문제</h1>
+      <h1 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px' }}>
+        <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>문제
+      </h1>
 
       {/* Top tabs: 문제 목록 / 채점 현황 — 채점 현황은 별도 화면이 아닌 내부 탭 (Key Decision) */}
       <TabBar
@@ -97,7 +99,7 @@ function SeasonTabs({
             cursor: 'pointer',
             color: seasonId === s.id ? C.text : C.muted,
             fontWeight: seasonId === s.id ? 600 : 400,
-            borderBottom: seasonId === s.id ? `2px solid ${C.blue}` : '2px solid transparent',
+            borderBottom: seasonId === s.id ? `2px solid ${C.accent}` : '2px solid transparent',
             marginBottom: -1,
             fontFamily: fontStack,
             display: 'flex',
@@ -110,9 +112,10 @@ function SeasonTabs({
             style={{
               fontSize: 10,
               padding: '1px 6px',
-              background: s.status === 'current' ? C.blue : C.borderLight,
-              color: s.status === 'current' ? '#fff' : C.muted,
-              borderRadius: 2,
+              background: s.status === 'current' ? C.accentBg : 'transparent',
+              border: `1px solid ${s.status === 'current' ? C.accent : C.border}`,
+              color: s.status === 'current' ? C.accent : C.muted,
+              fontFamily: monoStack,
               fontWeight: 600,
             }}
           >
@@ -171,8 +174,8 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
       {isCurrent ? (
         <div
           style={{
-            border: `1px solid ${C.blue}`,
-            background: '#f0f7ff',
+            border: `1px solid ${C.accent}`,
+            background: C.accentBg,
             padding: '12px 16px',
             marginBottom: 16,
             display: 'flex',
@@ -192,7 +195,7 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 11, color: C.muted }}>종료까지</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.red, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: C.red, fontFamily: monoStack, fontVariantNumeric: 'tabular-nums' }}>
               D-{season.dDay}
             </div>
           </div>
@@ -201,7 +204,7 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
         <div
           style={{
             border: `1px solid ${C.border}`,
-            background: C.bg,
+            background: C.surface,
             padding: '12px 16px',
             marginBottom: 16,
             display: 'flex',
@@ -246,9 +249,10 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
               onChange={e => setQ(e.target.value)}
               style={{
                 border: `1px solid ${C.border}`,
+                background: C.bg,
+                color: C.text,
                 padding: '6px 10px',
                 fontSize: 13,
-                borderRadius: 3,
                 width: 200,
                 fontFamily: fontStack,
                 outline: 'none',
@@ -259,14 +263,14 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
           {/* Problem table */}
           <table style={tableStyle}>
             <thead>
-              <tr style={theadRowStyle}>
-                <th style={th({ width: 70 })}>번호</th>
-                <th style={th()}>제목</th>
-                <th style={th()}>분류</th>
-                <th style={th({ width: 110 })}>난이도</th>
-                <th style={th({ textAlign: 'right', width: 70 })}>정답률</th>
-                <th style={th({ textAlign: 'right', width: 75 })}>점수</th>
-                <th style={th({ width: 80 })}>상태</th>
+              <tr style={{ ...theadRowStyle, background: C.surfaceAlt }}>
+                <th style={th({ fontFamily: monoStack, fontSize: 12, width: 70 })}>번호</th>
+                <th style={th({ fontFamily: monoStack, fontSize: 12 })}>제목</th>
+                <th style={th({ fontFamily: monoStack, fontSize: 12 })}>분류</th>
+                <th style={th({ fontFamily: monoStack, fontSize: 12, width: 110 })}>난이도</th>
+                <th style={th({ fontFamily: monoStack, fontSize: 12, textAlign: 'right', width: 70 })}>정답률</th>
+                <th style={th({ fontFamily: monoStack, fontSize: 12, textAlign: 'right', width: 75 })}>점수</th>
+                <th style={th({ fontFamily: monoStack, fontSize: 12, width: 80 })}>상태</th>
               </tr>
             </thead>
             <tbody>
@@ -278,7 +282,7 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
                       {p.displayNo}
                     </td>
                     <td style={td()}>
-                      <Link to={`/problems/${p.problemId}`} style={{ color: C.blue }}>
+                      <Link to={`/problems/${p.problemId}`} style={{ color: C.accent }}>
                         {p.title}
                       </Link>
                     </td>
@@ -286,10 +290,11 @@ function SeasonProblemsView({ seasons }: { seasons: SeasonSummary[] }) {
                     <td style={td()}>
                       <Tier tier={p.tier} />
                     </td>
-                    <td style={td(numCell)}>{p.acceptanceRate.toFixed(1)}%</td>
+                    <td style={td({ ...numCell, fontFamily: monoStack })}>{p.acceptanceRate.toFixed(1)}%</td>
                     <td
                       style={td({
                         ...numCell,
+                        fontFamily: monoStack,
                         fontWeight: 600,
                         color: isCurrent ? C.text : C.muted,
                         textDecoration: isCurrent ? 'none' : 'line-through', // 과거 시즌 = 점수 무효

@@ -170,7 +170,7 @@ function renderEmphasis(text: string): ReactNode[] {
       // http/https 만 허용 — javascript: 등 위험 스킴 차단
       if (link && /^https?:\/\//i.test(href)) {
         out.push(
-          <a key={key++} href={href} target="_blank" rel="noreferrer" style={{ color: C.blue }}>
+          <a key={key++} href={href} target="_blank" rel="noreferrer" style={{ color: C.accent }}>
             {link[1]}
           </a>,
         )
@@ -186,8 +186,8 @@ function renderEmphasis(text: string): ReactNode[] {
 
 const codeBlockStyle: CSSProperties = {
   background: C.bg,
-  border: `1px solid ${C.borderLight}`,
-  borderRadius: 8,
+  color: C.text,
+  border: `1px solid ${C.border}`,
   padding: '10px 12px',
   margin: '8px 0',
   fontFamily: monoStack,
@@ -197,9 +197,9 @@ const codeBlockStyle: CSSProperties = {
 }
 
 const codeSpanStyle: CSSProperties = {
-  background: C.bg,
+  background: C.surfaceAlt,
+  color: C.text,
   border: `1px solid ${C.borderLight}`,
-  borderRadius: 4,
   padding: '1px 5px',
   fontFamily: monoStack,
   fontSize: '0.9em',

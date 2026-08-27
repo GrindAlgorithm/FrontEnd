@@ -20,8 +20,8 @@ export function MarkdownEditor({
   const [tab, setTab] = useState<'write' | 'preview'>('write')
 
   return (
-    <div style={{ border: `1px solid ${C.border}`, borderRadius: 8, overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
+    <div style={{ border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', borderBottom: `1px solid ${C.border}`, background: C.surfaceAlt }}>
         <button type="button" onClick={() => setTab('write')} style={tabStyle(tab === 'write')}>
           작성
         </button>
@@ -49,6 +49,7 @@ export function MarkdownEditor({
             fontFamily: fontStack,
             fontSize: 14,
             lineHeight: 1.7,
+            background: C.bg,
             color: C.text,
             boxSizing: 'border-box',
           }}
@@ -70,12 +71,12 @@ function tabStyle(active: boolean): CSSProperties {
   return {
     padding: '8px 16px',
     border: 'none',
-    borderBottom: active ? `2px solid ${C.blue}` : '2px solid transparent',
+    borderBottom: active ? `2px solid ${C.accent}` : '2px solid transparent',
     background: 'transparent',
     fontFamily: fontStack,
     fontSize: 13,
     fontWeight: active ? 700 : 400,
-    color: active ? C.blue : C.muted,
+    color: active ? C.text : C.muted,
     cursor: 'pointer',
   }
 }

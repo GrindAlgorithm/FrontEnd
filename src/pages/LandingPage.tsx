@@ -42,8 +42,9 @@ function CtaButtons() {
       <Link
         to="/login"
         style={{
-          background: C.blue,
-          color: '#fff',
+          background: 'transparent',
+          color: C.accent,
+          border: `1px solid ${C.accent}`,
           padding: '10px 28px',
           fontSize: 14,
           fontWeight: 600,
@@ -54,7 +55,7 @@ function CtaButtons() {
       <Link
         to="/login"
         style={{
-          background: '#fff',
+          background: 'transparent',
           color: C.text,
           border: `1px solid ${C.border}`,
           padding: '10px 28px',
@@ -91,16 +92,26 @@ export function LandingPage() {
               display: 'inline-block',
               fontSize: 12,
               fontWeight: 600,
-              color: C.blue,
-              border: `1px solid ${C.blue}`,
+              color: C.accent,
+              border: `1px solid ${C.accent}`,
               padding: '3px 10px',
               marginBottom: 16,
               letterSpacing: 0.5,
+              fontFamily: monoStack,
             }}
           >
             시즌제 알고리즘 트레이닝
           </div>
-          <h1 style={{ fontSize: 34, fontWeight: 700, margin: '0 0 12px', letterSpacing: -1 }}>
+          <h1
+            style={{
+              fontSize: 34,
+              fontWeight: 700,
+              margin: '0 0 12px',
+              letterSpacing: -1,
+              fontFamily: monoStack,
+            }}
+          >
+            <span style={{ color: C.accent }}>{'❯ '}</span>
             매 시즌, 랭킹으로 증명하는
             <br />
             알고리즘 실력
@@ -141,6 +152,7 @@ export function LandingPage() {
       <section style={{ padding: '56px 0' }}>
         <div className="container">
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 24px', textAlign: 'center' }}>
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>
             GrindAlgorithm이 제공하는 것
           </h2>
           <div
@@ -151,7 +163,10 @@ export function LandingPage() {
             }}
           >
             {FEATURES.map(f => (
-              <div key={f.title} style={{ border: `1px solid ${C.border}`, padding: 18 }}>
+              <div
+                key={f.title}
+                style={{ background: C.surface, border: `1px solid ${C.border}`, padding: 18 }}
+              >
                 <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 8px' }}>{f.title}</h3>
                 <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.7, margin: 0 }}>{f.body}</p>
               </div>
@@ -161,9 +176,12 @@ export function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section style={{ padding: '48px 0', background: C.bg, borderTop: `1px solid ${C.borderLight}` }}>
+      <section
+        style={{ padding: '48px 0', background: C.surface, borderTop: `1px solid ${C.borderLight}` }}
+      >
         <div className="container">
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 24px', textAlign: 'center' }}>
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>
             이렇게 진행됩니다
           </h2>
           <div
@@ -180,7 +198,7 @@ export function LandingPage() {
                     fontFamily: monoStack,
                     fontSize: 22,
                     fontWeight: 700,
-                    color: C.blue,
+                    color: C.accent,
                     marginBottom: 8,
                   }}
                 >
@@ -218,7 +236,7 @@ export function LandingPage() {
           color: C.muted,
         }}
       >
-        Grind<span style={{ color: C.blue }}>Algorithm</span> — 시즌제 알고리즘 트레이닝 플랫폼
+        Grind<span style={{ color: C.accent }}>Algorithm</span> — 시즌제 알고리즘 트레이닝 플랫폼
       </footer>
     </div>
   )

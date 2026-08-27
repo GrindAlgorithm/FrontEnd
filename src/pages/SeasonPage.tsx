@@ -10,7 +10,7 @@ import type { ProblemStatus } from '../types/domain'
 
 const STATUS_BADGE: Record<ProblemStatus, { label: string; color: string }> = {
   cleared: { label: '✓ 클리어', color: C.green },
-  wip: { label: '시도중', color: C.blue },
+  wip: { label: '시도중', color: C.accent },
   untried: { label: '—', color: C.muted },
 }
 
@@ -37,6 +37,7 @@ export function SeasonPage() {
           }}
         >
           <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: -0.5 }}>
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>
             {season.name}
           </h1>
           <span style={{ fontSize: 13, color: C.muted }}>
@@ -50,12 +51,12 @@ export function SeasonPage() {
 
         {/* 진행률 바 */}
         <div style={{ position: 'relative', marginTop: 16 }}>
-          <div style={{ height: 6, background: C.borderLight, borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: 6, background: C.borderLight, overflow: 'hidden' }}>
             <div
               style={{
                 height: '100%',
                 width: `${Math.round(progressRatio * 100)}%`,
-                background: C.blue,
+                background: C.accent,
               }}
             />
           </div>
@@ -69,7 +70,9 @@ export function SeasonPage() {
             }}
           >
             <span>시작 ({formatShortDate(season.startDate)})</span>
-            <span style={{ color: C.red, fontWeight: 600 }}>오늘 · D-{season.dDay ?? '-'}</span>
+            <span style={{ color: C.red, fontWeight: 600, fontFamily: monoStack }}>
+              오늘 · D-{season.dDay ?? '-'}
+            </span>
             <span>종료 ({formatShortDate(season.endDate)})</span>
           </div>
         </div>
@@ -86,13 +89,15 @@ export function SeasonPage() {
           }}
         >
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>시즌 문제</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>
+              <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>시즌 문제
+            </h2>
             <p style={{ fontSize: 12, color: C.muted, margin: '4px 0 0' }}>
               이번 시즌 한정 문제 · 시즌 종료 후엔 랭킹 점수가 부여되지 않음
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, fontFamily: monoStack, fontVariantNumeric: 'tabular-nums' }}>
               {cleared}{' '}
               <span style={{ color: C.muted, fontSize: 14, fontWeight: 400 }}>/ {total}</span>
             </div>
@@ -104,12 +109,12 @@ export function SeasonPage() {
 
         <table style={tableStyle}>
           <thead>
-            <tr style={theadRowStyle}>
-              <th style={th({ width: 70 })}>번호</th>
-              <th style={th()}>제목</th>
-              <th style={th({ width: 120 })}>난이도</th>
-              <th style={th({ textAlign: 'right', width: 70 })}>점수</th>
-              <th style={th({ width: 80 })}>상태</th>
+            <tr style={{ ...theadRowStyle, background: C.surfaceAlt }}>
+              <th style={th({ fontFamily: monoStack, fontSize: 12, width: 70 })}>번호</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12 })}>제목</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12, width: 120 })}>난이도</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12, textAlign: 'right', width: 70 })}>점수</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12, width: 80 })}>상태</th>
             </tr>
           </thead>
           <tbody>
@@ -121,14 +126,14 @@ export function SeasonPage() {
                     {p.displayNo}
                   </td>
                   <td style={td()}>
-                    <Link to={`/problems/${p.problemId}`} style={{ color: C.blue }}>
+                    <Link to={`/problems/${p.problemId}`} style={{ color: C.accent }}>
                       {p.title}
                     </Link>
                   </td>
                   <td style={td()}>
                     <Tier tier={p.tier} />
                   </td>
-                  <td style={td({ ...numCell, fontWeight: 600 })}>{p.points}점</td>
+                  <td style={td({ ...numCell, fontFamily: monoStack, fontWeight: 600 })}>{p.points}점</td>
                   <td style={td({ color: st.color, fontWeight: 600, fontSize: 12 })}>{st.label}</td>
                 </tr>
               )
@@ -137,7 +142,7 @@ export function SeasonPage() {
         </table>
 
         <div style={{ marginTop: 10, fontSize: 12 }}>
-          <Link to={`/problems?season=${season.id}`} style={{ color: C.blue }}>
+          <Link to={`/problems?season=${season.id}`} style={{ color: C.accent }}>
             문제 화면에서 보기 →
           </Link>
         </div>
@@ -145,16 +150,18 @@ export function SeasonPage() {
 
       {/* 시즌 리워드 */}
       <section style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>시즌 리워드</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px' }}>
+          <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>시즌 리워드
+        </h2>
         <p style={{ fontSize: 12, color: C.muted, margin: '0 0 12px' }}>
           시즌 한정 뱃지 · 프로필 장식. 시즌 종료 후엔 획득 불가.
         </p>
         <table style={tableStyle}>
           <thead>
-            <tr style={theadRowStyle}>
-              <th style={th()}>리워드</th>
-              <th style={th()}>조건</th>
-              <th style={th({ width: 180 })}>상태</th>
+            <tr style={{ ...theadRowStyle, background: C.surfaceAlt }}>
+              <th style={th({ fontFamily: monoStack, fontSize: 12 })}>리워드</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12 })}>조건</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12, width: 180 })}>상태</th>
             </tr>
           </thead>
           <tbody>
@@ -199,14 +206,16 @@ export function SeasonPage() {
 
       {/* 이전 시즌 */}
       <section>
-        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>이전 시즌</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>
+          <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>이전 시즌
+        </h2>
         <table style={tableStyle}>
           <thead>
-            <tr style={theadRowStyle}>
-              <th style={th()}>시즌</th>
-              <th style={th()}>기간</th>
-              <th style={th()}>챔피언</th>
-              <th style={th()}>최종 티어</th>
+            <tr style={{ ...theadRowStyle, background: C.surfaceAlt }}>
+              <th style={th({ fontFamily: monoStack, fontSize: 12 })}>시즌</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12 })}>기간</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12 })}>챔피언</th>
+              <th style={th({ fontFamily: monoStack, fontSize: 12 })}>최종 티어</th>
             </tr>
           </thead>
           <tbody>
@@ -215,7 +224,7 @@ export function SeasonPage() {
                 <td style={td({ fontWeight: 600 })}>{s.name}</td>
                 <td style={td({ color: C.muted, fontSize: 12 })}>{s.periodText}</td>
                 <td style={td()}>
-                  <Link to={`/users/${s.champion.handle}`} style={{ color: C.blue }}>
+                  <Link to={`/users/${s.champion.handle}`} style={{ color: C.accent, fontFamily: monoStack }}>
                     {s.champion.handle}
                   </Link>
                 </td>

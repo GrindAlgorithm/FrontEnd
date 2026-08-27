@@ -1,25 +1,47 @@
 import type { SubmissionStatus, TierName, TitleColorKey } from './types/domain'
 
-// ── 디자인 토큰: 와이어프레임(algo_kr_overview.jsx)에서 그대로 이관 ──
+// ── 디자인 토큰: 세션 E 개편 — 다크 터미널 테마 (docs/DESIGN.md 참고) ──
+// 규칙: 그라데이션·box-shadow·border-radius 금지. 위계는 배경 대비와 1px 보더로만.
 export const C = {
-  blue: '#0d6efd',
-  blueDark: '#0a58ca',
-  border: '#dee2e6',
-  borderLight: '#e9ecef',
-  bg: '#f8f9fa',
-  text: '#212529',
-  muted: '#6c757d',
-  green: '#198754',
-  red: '#dc3545',
-  bronze: '#ad5600',
-  silver: '#435f7a',
-  gold: '#ec9a00',
+  // 액센트 — phosphor green 단일 액센트
+  accent: '#3fb950',
+  accentDim: '#2ea043',
+  accentBg: 'rgba(63, 185, 80, 0.12)',
+
+  // 표면 — 어두운 쪽이 아래층 (bg < surface < surfaceAlt)
+  bg: '#0d1117',
+  surface: '#161b22',
+  surfaceAlt: '#1c2128',
+  border: '#30363d',
+  borderLight: '#21262d',
+
+  // 텍스트
+  text: '#e6edf3',
+  muted: '#8b949e',
+
+  // 시맨틱
+  green: '#3fb950',
+  greenBg: 'rgba(63, 185, 80, 0.12)',
+  red: '#f85149',
+  redBg: 'rgba(248, 81, 73, 0.12)',
+  amber: '#d29922',
+  amberBg: 'rgba(210, 153, 34, 0.12)',
+
+  // 티어 — 다크 배경 대비 보정값
+  bronze: '#d1824a',
+  silver: '#9daebe',
+  gold: '#f0b429',
   platinum: '#27e2a4',
-  diamond: '#00b4fc',
+  diamond: '#4cc2ff',
+
+  // 레거시 별칭 — accent 로 이관 완료 후에도 임시 유지 (신규 코드는 accent 사용)
+  blue: '#3fb950',
+  blueDark: '#2ea043',
 } as const
 
 export const fontStack =
   '"Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
+// 한글이 섞이는 모노 맥락(로고·라벨)은 D2Coding → Pretendard 로 폴백된다
 export const monoStack =
   '"JetBrains Mono", "D2Coding", ui-monospace, SFMono-Regular, Menlo, "Cascadia Mono", monospace'
 
@@ -39,11 +61,11 @@ export const titleColorMap: Record<TitleColorKey, string> = {
   platinum: C.platinum,
   diamond: C.diamond,
   green: C.green,
-  blue: C.blue,
+  blue: C.accent,
 }
 
-// 잔디(활동 그래프) 단계 색상 — GitHub 잔디 톤
-export const JANDI_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'] as const
+// 잔디(활동 그래프) 단계 색상 — GitHub 다크 잔디 톤
+export const JANDI_COLORS = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'] as const
 
 // 채점 결과 → 표시 텍스트
 export const SUBMISSION_STATUS_TEXT: Record<SubmissionStatus, string> = {
@@ -70,7 +92,7 @@ export function submissionStatusColor(status: SubmissionStatus): string {
 
 // 토론 카테고리 색상
 export const DISCUSSION_TAG_COLOR = {
-  code_review: C.blue,
+  code_review: C.diamond,
   solution: C.green,
 } as const
 

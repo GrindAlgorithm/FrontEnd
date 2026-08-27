@@ -69,7 +69,7 @@ export function DiscussionPage() {
     <div>
       {/* Breadcrumb */}
       <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
-        <Link to={`/problems/${p.problemId}`} style={{ color: C.blue }}>
+        <Link to={`/problems/${p.problemId}`} style={{ color: C.accent }}>
           {noLabel} · {p.title}
         </Link>{' '}
         / 토론
@@ -115,7 +115,7 @@ export function DiscussionPage() {
             border: `1px solid ${C.border}`,
             padding: '48px 24px',
             textAlign: 'center',
-            background: C.bg,
+            background: C.surface,
           }}
         >
           <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
@@ -130,9 +130,9 @@ export function DiscussionPage() {
           <button
             onClick={() => navigate(`/problems/${p.problemId}/solve`)}
             style={{
-              background: C.blue,
-              color: '#fff',
-              border: 'none',
+              background: 'transparent',
+              color: C.accent,
+              border: `1px solid ${C.accent}`,
               padding: '10px 22px',
               fontSize: 14,
               cursor: 'pointer',
@@ -171,7 +171,7 @@ export function DiscussionPage() {
           <div
             style={{
               border: `1px solid ${C.green}`,
-              background: '#f0fff4',
+              background: C.greenBg,
               padding: '8px 14px',
               marginBottom: 16,
               fontSize: 13,
@@ -206,7 +206,7 @@ export function DiscussionPage() {
                   key={f.id}
                   onClick={() => setFilter(f.id)}
                   style={{
-                    background: '#fff',
+                    background: 'transparent',
                     color: filter === f.id ? C.text : C.muted,
                     border: `1px solid ${filter === f.id ? C.text : C.border}`,
                     padding: '5px 12px',
@@ -224,9 +224,9 @@ export function DiscussionPage() {
               <button
                 onClick={() => setShowWrite(w => !w)}
                 style={{
-                  background: showWrite ? '#fff' : C.blue,
-                  color: showWrite ? C.muted : '#fff',
-                  border: showWrite ? `1px solid ${C.border}` : 'none',
+                  background: 'transparent',
+                  color: showWrite ? C.muted : C.accent,
+                  border: `1px solid ${showWrite ? C.border : C.accent}`,
                   padding: '6px 14px',
                   fontSize: 13,
                   cursor: 'pointer',
@@ -243,6 +243,7 @@ export function DiscussionPage() {
           {showWrite && (
             <div
               style={{
+                background: C.surface,
                 border: `1px solid ${C.border}`,
                 padding: 16,
                 marginBottom: 16,
@@ -258,7 +259,7 @@ export function DiscussionPage() {
                     type="button"
                     onClick={() => setWriteCategory(cat)}
                     style={{
-                      background: '#fff',
+                      background: 'transparent',
                       color: writeCategory === cat ? DISCUSSION_TAG_COLOR[cat] : C.muted,
                       border: `1px solid ${writeCategory === cat ? DISCUSSION_TAG_COLOR[cat] : C.border}`,
                       padding: '5px 12px',
@@ -278,7 +279,9 @@ export function DiscussionPage() {
                 value={writeTitle}
                 onChange={e => setWriteTitle(e.target.value)}
                 style={{
+                  background: C.bg,
                   border: `1px solid ${C.border}`,
+                  color: C.text,
                   padding: '8px 10px',
                   fontSize: 13,
                   fontFamily: fontStack,
@@ -296,9 +299,9 @@ export function DiscussionPage() {
                   onClick={submitPost}
                   disabled={writePending || writeTitle.trim() === '' || writeBody.trim() === ''}
                   style={{
-                    background: C.blue,
-                    color: '#fff',
-                    border: 'none',
+                    background: 'transparent',
+                    color: C.accent,
+                    border: `1px solid ${C.accent}`,
                     padding: '8px 18px',
                     fontSize: 13,
                     fontWeight: 600,
@@ -351,7 +354,10 @@ export function DiscussionPage() {
                     <td style={td({ padding: '10px 6px' })}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                         <TierDot name={post.author.tierName} />
-                        <Link to={`/users/${post.author.handle}`} style={{ color: C.blue, fontSize: 12 }}>
+                        <Link
+                          to={`/users/${post.author.handle}`}
+                          style={{ color: C.accent, fontSize: 12 }}
+                        >
                           {post.author.handle}
                         </Link>
                       </span>

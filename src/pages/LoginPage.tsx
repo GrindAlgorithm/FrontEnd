@@ -72,7 +72,9 @@ export function LoginPage() {
 
   const inputStyle = {
     width: '100%',
+    background: C.bg,
     border: `1px solid ${C.border}`,
+    color: C.text,
     padding: '9px 12px',
     fontSize: 13,
     fontFamily: fontStack,
@@ -81,10 +83,19 @@ export function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: '48px auto 0' }}>
+    <div
+      style={{
+        maxWidth: 360,
+        margin: '48px auto 0',
+        background: C.surface,
+        border: `1px solid ${C.border}`,
+        padding: '32px 28px',
+        boxSizing: 'border-box',
+      }}
+    >
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <div style={{ fontWeight: 700, fontSize: 24, letterSpacing: -0.5 }}>
-          Grind<span style={{ color: C.blue }}>Algorithm</span>
+          Grind<span style={{ color: C.accent }}>Algorithm</span>
         </div>
         <p style={{ fontSize: 13, color: C.muted, margin: '8px 0 0' }}>
           시즌제 랭킹 기반 알고리즘 문제 풀이
@@ -97,9 +108,9 @@ export function LoginPage() {
           disabled={pending}
           style={{
             width: '100%',
-            background: '#24292f',
-            color: '#fff',
-            border: 'none',
+            background: 'transparent',
+            color: C.text,
+            border: `1px solid ${C.border}`,
             padding: '10px 16px',
             fontSize: 13,
             cursor: 'pointer',
@@ -114,7 +125,7 @@ export function LoginPage() {
           disabled={pending}
           style={{
             width: '100%',
-            background: '#fff',
+            background: 'transparent',
             color: C.text,
             border: `1px solid ${C.border}`,
             padding: '10px 16px',
@@ -176,9 +187,9 @@ export function LoginPage() {
           disabled={pending}
           style={{
             width: '100%',
-            background: C.blue,
-            color: '#fff',
-            border: 'none',
+            background: 'transparent',
+            color: C.accent,
+            border: `1px solid ${C.accent}`,
             padding: '10px 16px',
             fontSize: 13,
             cursor: pending ? 'wait' : 'pointer',
@@ -208,7 +219,7 @@ export function LoginPage() {
                 background: 'none',
                 border: 'none',
                 padding: 0,
-                color: C.blue,
+                color: C.accent,
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontFamily: fontStack,
@@ -228,7 +239,7 @@ export function LoginPage() {
                 background: 'none',
                 border: 'none',
                 padding: 0,
-                color: C.blue,
+                color: C.accent,
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontFamily: fontStack,

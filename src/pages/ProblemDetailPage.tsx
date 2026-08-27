@@ -91,7 +91,7 @@ function ProblemView({ p }: { p: ProblemDetail }) {
     p.my.status === 'cleared' ? (
       <span style={{ color: C.green, fontWeight: 600 }}>✓ 클리어</span>
     ) : p.my.status === 'wip' ? (
-      <span style={{ color: C.blue, fontWeight: 600 }}>시도중 ({p.my.attemptCount}회 제출, 미해결)</span>
+      <span style={{ color: C.accent, fontWeight: 600 }}>시도중 ({p.my.attemptCount}회 제출, 미해결)</span>
     ) : (
       <span style={{ color: C.muted }}>미시도</span>
     )
@@ -109,7 +109,7 @@ function ProblemView({ p }: { p: ProblemDetail }) {
         }}
       >
         <thead>
-          <tr style={{ background: C.bg }}>
+          <tr style={{ background: C.surfaceAlt }}>
             {['시간 제한', '메모리 제한', '제출', '정답', '맞힌 사람', '정답 비율', '시즌 점수'].map(
               (h, i, arr) => (
                 <th
@@ -117,6 +117,8 @@ function ProblemView({ p }: { p: ProblemDetail }) {
                   style={{
                     padding: '8px 6px',
                     fontWeight: 600,
+                    fontFamily: monoStack,
+                    fontSize: 11,
                     borderRight: i < arr.length - 1 ? `1px solid ${C.border}` : 'none',
                   }}
                 >
@@ -142,6 +144,7 @@ function ProblemView({ p }: { p: ProblemDetail }) {
                 style={{
                   padding: '8px 6px',
                   textAlign: 'center',
+                  fontFamily: monoStack,
                   borderRight: i < arr.length - 1 ? `1px solid ${C.border}` : 'none',
                   borderTop: `1px solid ${C.border}`,
                 }}
@@ -164,7 +167,7 @@ function ProblemView({ p }: { p: ProblemDetail }) {
             borderBottom: `1px solid ${C.border}`,
           }}
         >
-          알고리즘 분류
+          <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>알고리즘 분류
         </h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {p.tags.map(t => (
@@ -172,10 +175,11 @@ function ProblemView({ p }: { p: ProblemDetail }) {
               key={t}
               style={{
                 border: `1px solid ${C.border}`,
-                background: '#fff',
+                background: 'transparent',
                 padding: '5px 12px',
                 fontSize: 13,
-                color: C.blue,
+                fontFamily: monoStack,
+                color: C.accent,
               }}
             >
               {t}
@@ -194,7 +198,7 @@ function ProblemView({ p }: { p: ProblemDetail }) {
       <section
         style={{
           border: `1px solid ${C.border}`,
-          background: C.bg,
+          background: C.surface,
           padding: '32px 24px',
           marginBottom: 20,
           textAlign: 'center',
@@ -213,9 +217,9 @@ function ProblemView({ p }: { p: ProblemDetail }) {
         <button
           onClick={() => navigate(`/problems/${p.problemId}/solve`)}
           style={{
-            background: C.blue,
-            color: '#fff',
-            border: 'none',
+            background: 'transparent',
+            color: C.accent,
+            border: `1px solid ${C.accent}`,
             padding: '12px 32px',
             fontSize: 15,
             cursor: 'pointer',
@@ -247,7 +251,7 @@ function ProblemView({ p }: { p: ProblemDetail }) {
 
       {p.seasonId != null && (
         <div style={{ marginTop: 10, fontSize: 12 }}>
-          <Link to={`/problems?season=${p.seasonId}`} style={{ color: C.blue }}>
+          <Link to={`/problems?season=${p.seasonId}`} style={{ color: C.accent }}>
             ← 시즌 문제 목록으로
           </Link>
         </div>

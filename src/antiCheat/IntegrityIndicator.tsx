@@ -11,13 +11,13 @@ import type { IntegrityLevel, SolveEvent, SolveIntegritySummary } from '../types
 
 const LEVEL_STYLE: Record<IntegrityLevel, { color: string; label: string; dot: string }> = {
   clean: { color: C.green, label: '정상', dot: '●' },
-  caution: { color: C.gold, label: '주의', dot: '▲' },
+  caution: { color: C.amber, label: '주의', dot: '▲' },
   risk: { color: C.red, label: '위험', dot: '■' },
 }
 
 const SEVERITY_COLOR = {
   info: C.muted,
-  warn: C.gold,
+  warn: C.amber,
   critical: C.red,
 } as const
 
@@ -92,11 +92,11 @@ export function IntegrityIndicator({
           display: 'flex',
           alignItems: 'center',
           gap: 5,
-          background: open ? '#fff' : 'transparent',
+          background: open ? C.surfaceAlt : 'transparent',
           border: `1px solid ${open ? C.border : 'transparent'}`,
           padding: '3px 8px',
           fontSize: 11,
-          fontFamily: fontStack,
+          fontFamily: monoStack,
           cursor: 'pointer',
           color: C.muted,
         }}
@@ -118,9 +118,8 @@ export function IntegrityIndicator({
             width: 320,
             maxHeight: 420,
             overflow: 'auto',
-            background: '#fff',
+            background: C.surface,
             border: `1px solid ${C.border}`,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
             zIndex: 20,
           }}
         >
@@ -128,7 +127,7 @@ export function IntegrityIndicator({
             style={{
               padding: '9px 12px',
               borderBottom: `1px solid ${C.borderLight}`,
-              background: C.bg,
+              background: C.surfaceAlt,
               fontSize: 12,
               fontWeight: 700,
               display: 'flex',
@@ -224,7 +223,7 @@ export function IntegrityIndicator({
             style={{
               padding: '8px 12px',
               borderTop: `1px solid ${C.borderLight}`,
-              background: C.bg,
+              background: C.surfaceAlt,
               fontSize: 10,
               color: C.muted,
               lineHeight: 1.6,

@@ -22,9 +22,9 @@ export function SubmissionsTable({ rows }: { rows: SubmissionSummary[] }) {
   return (
     <table style={{ ...tableStyle, fontSize: 12 }}>
       <thead>
-        <tr style={theadRowStyle}>
+        <tr style={{ ...theadRowStyle, background: C.surfaceAlt }}>
           {['채점 번호', '아이디', '문제', '결과', '메모리', '시간', '언어', '코드 길이', '제출 시각'].map(h => (
-            <th key={h} style={th({ padding: '10px 6px' })}>
+            <th key={h} style={th({ padding: '10px 6px', fontFamily: monoStack, fontSize: 11 })}>
               {h}
             </th>
           ))}
@@ -37,12 +37,12 @@ export function SubmissionsTable({ rows }: { rows: SubmissionSummary[] }) {
               {s.submissionId}
             </td>
             <td style={td({ padding: '10px 6px' })}>
-              <Link to={`/users/${s.user.handle}`} style={{ color: C.blue }}>
+              <Link to={`/users/${s.user.handle}`} style={{ color: C.accent }}>
                 {s.user.handle}
               </Link>
             </td>
             <td style={td({ padding: '10px 6px' })}>
-              <Link to={`/problems/${s.problem.problemId}`} style={{ color: C.blue }}>
+              <Link to={`/problems/${s.problem.problemId}`} style={{ color: C.accent }}>
                 {problemLabel(s)}
               </Link>
             </td>
@@ -51,18 +51,19 @@ export function SubmissionsTable({ rows }: { rows: SubmissionSummary[] }) {
                 padding: '10px 6px',
                 color: submissionStatusColor(s.status),
                 fontWeight: 600,
+                fontFamily: monoStack,
               })}
             >
               {submissionStatusText(s.status, s.progress)}
             </td>
-            <td style={td({ padding: '10px 6px', fontVariantNumeric: 'tabular-nums', color: C.muted })}>
+            <td style={td({ padding: '10px 6px', fontFamily: monoStack, fontVariantNumeric: 'tabular-nums', color: C.muted })}>
               {s.memoryKb != null ? `${s.memoryKb.toLocaleString()} KB` : '-'}
             </td>
-            <td style={td({ padding: '10px 6px', fontVariantNumeric: 'tabular-nums', color: C.muted })}>
+            <td style={td({ padding: '10px 6px', fontFamily: monoStack, fontVariantNumeric: 'tabular-nums', color: C.muted })}>
               {s.timeMs != null ? `${s.timeMs} ms` : '-'}
             </td>
             <td style={td({ padding: '10px 6px', color: C.muted })}>{langLabel(s.language)}</td>
-            <td style={td({ padding: '10px 6px', fontVariantNumeric: 'tabular-nums', color: C.muted })}>
+            <td style={td({ padding: '10px 6px', fontFamily: monoStack, fontVariantNumeric: 'tabular-nums', color: C.muted })}>
               {s.codeBytes} B
             </td>
             <td style={td({ padding: '10px 6px', color: C.muted })}>{formatRelative(s.submittedAt)}</td>

@@ -45,7 +45,7 @@ export function DiscussionPostPage() {
         }}
       >
         <TierDot name={data.author.tierName} />
-        <Link to={`/users/${data.author.handle}`} style={{ color: C.blue }}>
+        <Link to={`/users/${data.author.handle}`} style={{ color: C.accent }}>
           {data.author.handle}
         </Link>
         <span>· {formatRelative(data.createdAt)}</span>

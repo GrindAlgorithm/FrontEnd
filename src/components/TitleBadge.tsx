@@ -1,4 +1,4 @@
-import { titleColorMap } from '../theme'
+import { monoStack, titleColorMap } from '../theme'
 import type { UserTitle } from '../types/domain'
 
 /** 칭호 뱃지 — 닉네임 옆/프로필 헤더에 표시 */
@@ -16,9 +16,10 @@ export function TitleBadge({ title, size = 'sm' }: { title: UserTitle; size?: 's
         display: 'inline-flex',
         alignItems: 'center',
         gap: 5,
-        background: '#fff',
+        background: 'transparent',
         color,
         fontWeight: 600,
+        fontFamily: monoStack,
         whiteSpace: 'nowrap',
       }}
     >

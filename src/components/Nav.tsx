@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { C, fontStack } from '../theme'
+import { C, fontStack, monoStack } from '../theme'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_LINKS: { to: string; label: string; isActive: (path: string) => boolean }[] = [
@@ -33,13 +33,18 @@ export function Nav() {
       : NAV_LINKS
 
   return (
-    <header style={{ borderBottom: `1px solid ${C.borderLight}`, background: '#fff' }}>
+    <header style={{ borderBottom: `1px solid ${C.border}`, background: C.surface }}>
       <div
         className="container"
         style={{ height: 52, gap: 24, display: 'flex', alignItems: 'center' }}
       >
-        <Link to="/" style={{ fontWeight: 700, fontSize: 17, letterSpacing: -0.5 }}>
-          Grind<span style={{ color: C.blue }}>Algorithm</span>
+        <Link
+          to="/"
+          style={{ fontFamily: monoStack, fontWeight: 600, fontSize: 15, whiteSpace: 'nowrap' }}
+        >
+          <span style={{ color: C.accent }}>❯ </span>
+          grind<span style={{ color: C.muted }}>_</span>algorithm
+          <span className="cursor-blink" aria-hidden />
         </Link>
         <nav style={{ display: 'flex', gap: 20, flex: 1 }}>
           {navLinks.map(l => {
@@ -53,7 +58,7 @@ export function Nav() {
                   color: active ? C.text : C.muted,
                   fontWeight: active ? 600 : 400,
                   padding: '4px 2px',
-                  borderBottom: active ? `2px solid ${C.blue}` : '2px solid transparent',
+                  borderBottom: active ? `2px solid ${C.accent}` : '2px solid transparent',
                   marginBottom: -1,
                 }}
               >
@@ -65,7 +70,10 @@ export function Nav() {
         <div style={{ display: 'flex', gap: 16, fontSize: 13, alignItems: 'center' }}>
           {me ? (
             <>
-              <Link to={`/users/${me.handle}`} style={{ color: C.blue, fontWeight: 600 }}>
+              <Link
+                to={`/users/${me.handle}`}
+                style={{ color: C.accent, fontWeight: 600, fontFamily: monoStack }}
+              >
                 {me.handle}
               </Link>
               <button
@@ -88,7 +96,7 @@ export function Nav() {
               <Link to="/login" style={{ color: C.muted }}>
                 로그인
               </Link>
-              <Link to="/login" style={{ color: C.blue }}>
+              <Link to="/login" style={{ color: C.accent }}>
                 회원가입
               </Link>
             </>

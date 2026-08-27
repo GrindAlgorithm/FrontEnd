@@ -181,7 +181,7 @@ export function IDEPage() {
             ? { width: '100%', height: '40%', minHeight: 220, borderBottom: `1px solid ${C.border}` }
             : { width: `${hSplit.ratio * 100}%`, borderRight: `1px solid ${C.border}` }),
           overflow: 'auto',
-          background: '#fff',
+          background: C.bg,
           display: 'flex',
           flexDirection: 'column',
           flexShrink: 0,
@@ -190,8 +190,8 @@ export function IDEPage() {
         <div
           style={{
             padding: '10px 16px',
-            borderBottom: `1px solid ${C.borderLight}`,
-            background: C.bg,
+            borderBottom: `1px solid ${C.border}`,
+            background: C.surface,
             fontSize: 12,
             fontWeight: 600,
             color: C.muted,
@@ -202,7 +202,7 @@ export function IDEPage() {
           }}
         >
           <span>문제</span>
-          <Link to={`/problems/${problem.problemId}`} style={{ color: C.blue, fontWeight: 400 }}>
+          <Link to={`/problems/${problem.problemId}`} style={{ color: C.accent, fontWeight: 400 }}>
             상세 화면 ↗
           </Link>
         </div>
@@ -256,7 +256,7 @@ export function IDEPage() {
               </h3>
               <pre
                 style={{
-                  background: C.bg,
+                  background: C.surfaceAlt,
                   padding: 10,
                   fontSize: 12,
                   margin: '0 0 12px',
@@ -273,7 +273,7 @@ export function IDEPage() {
               </h3>
               <pre
                 style={{
-                  background: C.bg,
+                  background: C.surfaceAlt,
                   padding: 10,
                   fontSize: 12,
                   margin: '0 0 16px',
@@ -291,7 +291,7 @@ export function IDEPage() {
           <button
             onClick={() => setInput(body.samples[0]?.input ?? '')}
             style={{
-              background: '#fff',
+              background: 'transparent',
               border: `1px solid ${C.border}`,
               padding: '6px 12px',
               fontSize: 12,
@@ -315,7 +315,7 @@ export function IDEPage() {
             flexShrink: 0,
             cursor: 'col-resize',
             touchAction: 'none',
-            background: hSplit.dragging ? C.blue : C.bg,
+            background: hSplit.dragging ? C.accent : C.border,
             borderRight: `1px solid ${C.border}`,
           }}
         />
@@ -332,8 +332,8 @@ export function IDEPage() {
             display: 'flex',
             alignItems: 'center',
             padding: '8px 12px',
-            borderBottom: `1px solid ${C.borderLight}`,
-            background: C.bg,
+            borderBottom: `1px solid ${C.border}`,
+            background: C.surface,
             gap: 8,
           }}
         >
@@ -345,7 +345,8 @@ export function IDEPage() {
               padding: '4px 8px',
               fontSize: 12,
               fontFamily: fontStack,
-              background: '#fff',
+              background: C.bg,
+              color: C.text,
               cursor: 'pointer',
             }}
           >
@@ -390,7 +391,7 @@ export function IDEPage() {
             onClick={handleRun}
             disabled={running || submitting}
             style={{
-              background: '#fff',
+              background: 'transparent',
               color: C.text,
               border: `1px solid ${C.border}`,
               padding: '5px 14px',
@@ -406,9 +407,9 @@ export function IDEPage() {
             onClick={handleSubmit}
             disabled={running || submitting}
             style={{
-              background: C.blue,
-              color: '#fff',
-              border: 'none',
+              background: 'transparent',
+              color: C.accent,
+              border: `1px solid ${C.accent}`,
               padding: '6px 18px',
               fontSize: 12,
               cursor: submitting ? 'wait' : 'pointer',
@@ -439,7 +440,7 @@ export function IDEPage() {
               flexShrink: 0,
               cursor: 'row-resize',
               touchAction: 'none',
-              background: vSplit.dragging ? C.blue : C.bg,
+              background: vSplit.dragging ? C.accent : C.border,
               borderTop: `1px solid ${C.border}`,
             }}
           />
@@ -449,7 +450,7 @@ export function IDEPage() {
         <div
           style={{
             display: 'flex',
-            background: '#fff',
+            background: C.bg,
             flexShrink: 0,
             ...(narrow
               ? { borderTop: `1px solid ${C.border}`, height: 200, minHeight: 200 }
@@ -470,8 +471,8 @@ export function IDEPage() {
                 fontSize: 11,
                 fontWeight: 600,
                 color: C.muted,
-                background: C.bg,
-                borderBottom: `1px solid ${C.borderLight}`,
+                background: C.surface,
+                borderBottom: `1px solid ${C.border}`,
                 letterSpacing: 0.3,
               }}
             >
@@ -490,7 +491,7 @@ export function IDEPage() {
                 fontFamily: monoStack,
                 fontSize: 12,
                 resize: 'none',
-                background: '#fff',
+                background: C.bg,
                 color: C.text,
                 lineHeight: 1.5,
               }}
@@ -503,8 +504,8 @@ export function IDEPage() {
                 fontSize: 11,
                 fontWeight: 600,
                 color: C.muted,
-                background: C.bg,
-                borderBottom: `1px solid ${C.borderLight}`,
+                background: C.surface,
+                borderBottom: `1px solid ${C.border}`,
                 letterSpacing: 0.3,
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -513,7 +514,7 @@ export function IDEPage() {
               <span>출력</span>
               {verdict && (
                 <span style={{ fontWeight: 400 }}>
-                  <Link to="/problems?tab=submissions" style={{ color: C.blue }}>
+                  <Link to="/problems?tab=submissions" style={{ color: C.accent }}>
                     채점 현황 →
                   </Link>
                   {verdict === 'accepted' && (
@@ -538,7 +539,7 @@ export function IDEPage() {
                 fontFamily: monoStack,
                 fontSize: 12,
                 overflow: 'auto',
-                background: '#fff',
+                background: C.bg,
                 color: output.startsWith('⚠') ? C.red : C.text,
                 lineHeight: 1.5,
               }}
@@ -555,8 +556,8 @@ export function IDEPage() {
             padding: '4px 12px',
             fontSize: 11,
             color: C.muted,
-            background: C.bg,
-            borderTop: `1px solid ${C.borderLight}`,
+            background: C.surface,
+            borderTop: `1px solid ${C.border}`,
             gap: 16,
             fontFamily: monoStack,
             alignItems: 'center',

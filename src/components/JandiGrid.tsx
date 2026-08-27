@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { JANDI_COLORS } from '../theme'
+import { C, JANDI_COLORS } from '../theme'
 
 /** 잔디(활동) 그리드 — 열=주, 행=요일 */
 export function JandiGrid({
@@ -29,8 +29,9 @@ export function JandiGrid({
                 y={di * 14}
                 width={11}
                 height={11}
-                rx={2}
                 fill={JANDI_COLORS[level] ?? JANDI_COLORS[0]}
+                stroke={C.borderLight}
+                strokeWidth={1}
               />
             ))}
           </g>
@@ -45,14 +46,14 @@ export function JandiGrid({
             gap: 4,
             marginTop: 10,
             fontSize: 11,
-            color: '#6c757d',
+            color: C.muted,
           }}
         >
           <span style={{ marginRight: 4 }}>적음</span>
           {JANDI_COLORS.map((c, i) => (
             <span
               key={i}
-              style={{ width: 11, height: 11, background: c, borderRadius: 2, display: 'inline-block' }}
+              style={{ width: 11, height: 11, background: c, border: `1px solid ${C.borderLight}`, display: 'inline-block' }}
             />
           ))}
           <span style={{ marginLeft: 4 }}>많음</span>

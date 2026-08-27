@@ -74,7 +74,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
           <div
             style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}
           >
-            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{u.handle}</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, fontFamily: monoStack }}>{u.handle}</h1>
             {selectedTitle && <TitleBadge title={selectedTitle} size="md" />}
           </div>
           <div style={{ fontSize: 11, color: C.muted, fontFamily: monoStack, marginBottom: 12 }}>
@@ -94,7 +94,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
                 시즌 티어
               </div>
               {u.seasonTier ? <Tier tier={u.seasonTier} /> : <span style={{ fontSize: 12, color: C.muted }}>미배치</span>}
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 4, fontFamily: monoStack }}>
                 시즌 점수 {u.seasonScore.toLocaleString()}
                 {u.seasonRank != null && <> · {u.seasonRank}위</>}
               </div>
@@ -117,7 +117,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
             borderBottom: `1px solid ${C.border}`,
           }}
         >
-          통계
+          <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>통계
         </h2>
         <table style={tableStyle}>
           <tbody>
@@ -128,11 +128,11 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
             ].map((row, i) => (
               <tr key={i} style={bodyRowStyle}>
                 <td style={td({ padding: '8px 6px', color: C.muted, width: '15%' })}>{row[0]}</td>
-                <td style={td({ padding: '8px 6px', fontWeight: 600, fontVariantNumeric: 'tabular-nums', width: '35%' })}>
+                <td style={td({ padding: '8px 6px', fontWeight: 600, fontFamily: monoStack, fontVariantNumeric: 'tabular-nums', width: '35%' })}>
                   {row[1]}
                 </td>
                 <td style={td({ padding: '8px 6px', color: C.muted, width: '15%' })}>{row[2]}</td>
-                <td style={td({ padding: '8px 6px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' })}>
+                <td style={td({ padding: '8px 6px', fontWeight: 600, fontFamily: monoStack, fontVariantNumeric: 'tabular-nums' })}>
                   {row[3]}
                 </td>
               </tr>
@@ -154,7 +154,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
           }}
         >
           <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>
-            칭호{' '}
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>칭호{' '}
             <span style={{ fontSize: 12, color: C.muted, fontWeight: 400 }}>
               {owned.length}{u.isMe && ` / ${u.titles.length}`}
             </span>
@@ -193,8 +193,8 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
                 <button
                   onClick={() => selectTitle(null)}
                   style={{
-                    border: `1.5px solid ${selectedTitleId === null ? C.blue : C.border}`,
-                    background: selectedTitleId === null ? '#f0f7ff' : '#fff',
+                    border: `1px solid ${selectedTitleId === null ? C.accent : C.border}`,
+                    background: selectedTitleId === null ? C.accentBg : C.surface,
                     padding: '10px 12px',
                     cursor: 'pointer',
                     fontFamily: fontStack,
@@ -212,7 +212,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
                     <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>닉네임만 표시</div>
                   </div>
                   {selectedTitleId === null && (
-                    <span style={{ color: C.blue, fontWeight: 700 }}>✓</span>
+                    <span style={{ color: C.accent, fontWeight: 700 }}>✓</span>
                   )}
                 </button>
 
@@ -253,7 +253,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
                     key={t.id}
                     style={{
                       border: `1px solid ${C.border}`,
-                      background: C.bg,
+                      background: C.surface,
                       padding: '10px 12px',
                       fontFamily: fontStack,
                       display: 'flex',
@@ -333,7 +333,9 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
             marginBottom: 10,
           }}
         >
-          <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>최근 1년 활동</h2>
+          <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>최근 1년 활동
+          </h2>
           <span style={{ fontSize: 11, color: C.muted }}>
             {u.activity.activeDays}일 활동 · 평균 {u.activity.avgPerDay}문제/일
           </span>
@@ -355,7 +357,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
               borderBottom: `1px solid ${C.border}`,
             }}
           >
-            최근 푼 문제
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>최근 푼 문제
           </h2>
           <table style={{ ...tableStyle, fontSize: 12 }}>
             <tbody>
@@ -365,7 +367,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
                     {p.displayNo}
                   </td>
                   <td style={td({ padding: '8px 6px' })}>
-                    <Link to={`/problems/${p.problemId}`} style={{ color: C.blue }}>
+                    <Link to={`/problems/${p.problemId}`} style={{ color: C.accent }}>
                       {p.title}
                     </Link>
                   </td>
@@ -391,7 +393,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
               borderBottom: `1px solid ${C.border}`,
             }}
           >
-            최근 제출
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>최근 제출
           </h2>
           <table style={{ ...tableStyle, fontSize: 12 }}>
             <tbody>
@@ -401,7 +403,7 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
                     {s.displayNo}
                   </td>
                   <td style={td({ padding: '8px 6px' })}>
-                    <Link to={`/problems/${s.problemId}`} style={{ color: C.blue }}>
+                    <Link to={`/problems/${s.problemId}`} style={{ color: C.accent }}>
                       {s.title}
                     </Link>
                   </td>
@@ -442,8 +444,8 @@ function TitleOption({
     <button
       onClick={onSelect}
       style={{
-        border: `1.5px solid ${selected ? C.blue : C.border}`,
-        background: selected ? '#f0f7ff' : '#fff',
+        border: `1px solid ${selected ? C.accent : C.border}`,
+        background: selected ? C.accentBg : C.surface,
         padding: '10px 12px',
         cursor: 'pointer',
         fontFamily: fontStack,
@@ -478,7 +480,7 @@ function TitleOption({
           {t.description}
         </div>
       </div>
-      {selected && <span style={{ color: C.blue, fontWeight: 700, flexShrink: 0 }}>✓</span>}
+      {selected && <span style={{ color: C.accent, fontWeight: 700, flexShrink: 0 }}>✓</span>}
     </button>
   )
 }

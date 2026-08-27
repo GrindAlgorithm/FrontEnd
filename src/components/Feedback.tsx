@@ -11,13 +11,25 @@ export function LoadingView({ label = '불러오는 중…' }: { label?: string 
 export function ErrorView({ error, onRetry }: { error: Error; onRetry?: () => void }) {
   return (
     <div style={{ padding: '48px 0', textAlign: 'center', fontSize: 13 }}>
-      <div style={{ color: C.red, marginBottom: 12 }}>{error.message}</div>
+      <div
+        style={{
+          color: C.red,
+          background: C.redBg,
+          border: `1px solid ${C.red}`,
+          padding: '10px 14px',
+          display: 'inline-block',
+          marginBottom: 12,
+        }}
+      >
+        {error.message}
+      </div>
       {onRetry && (
         <button
           onClick={onRetry}
           style={{
-            background: '#fff',
+            background: 'transparent',
             border: `1px solid ${C.border}`,
+            color: C.text,
             padding: '6px 16px',
             fontSize: 12,
             cursor: 'pointer',

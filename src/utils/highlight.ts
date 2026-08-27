@@ -3,12 +3,13 @@ import type { LanguageCode } from '../types/domain'
 // 경량 신택스 하이라이터 — 와이어프레임 이관.
 // MVP용 정규식 기반: 외부 에디터 라이브러리(CodeMirror/Monaco) 도입 전까지 사용.
 
+// 다크 테마용 팔레트 (VSCode Dark+ 톤)
 const HL: Record<TokenKind, string> = {
-  keyword: '#0033b3',
-  type: '#267f99',
-  string: '#a31515',
-  comment: '#6e9956',
-  number: '#1750eb',
+  keyword: '#569cd6',
+  type: '#4ec9b0',
+  string: '#ce9178',
+  comment: '#6a9955',
+  number: '#b5cea8',
 }
 
 type TokenKind = 'keyword' | 'type' | 'string' | 'comment' | 'number'

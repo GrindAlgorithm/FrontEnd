@@ -38,7 +38,7 @@ export function TabBar({
               cursor: 'pointer',
               color: isActive ? C.text : C.muted,
               fontWeight: isActive ? 600 : 400,
-              borderBottom: isActive ? `2px solid ${C.blue}` : '2px solid transparent',
+              borderBottom: isActive ? `2px solid ${C.accent}` : '2px solid transparent',
               marginBottom: -1,
               fontFamily: fontStack,
               display: 'flex',

@@ -23,7 +23,7 @@ export function NoticePage() {
       </Link>
 
       <div style={{ margin: '16px 0 4px', display: 'flex', alignItems: 'baseline', gap: 8 }}>
-        <span style={{ fontSize: 12, color: data.highlight ? C.red : C.blue, fontWeight: 600 }}>
+        <span style={{ fontSize: 12, color: data.highlight ? C.red : C.accent, fontWeight: 600 }}>
           [{data.tag}]
         </span>
         <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{data.title}</h1>
