@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useApi } from '../hooks/useApi'
+import { useMediaQuery } from '../hooks/useMediaQuery'
+import { useSplit } from '../hooks/useSplit'
 import { C, fontStack, monoStack, submissionStatusText } from '../theme'
 import { Tier } from '../components/Tier'
 import { CodeEditor } from '../components/CodeEditor'
@@ -37,6 +39,30 @@ export function IDEPage() {
   const [verdict, setVerdict] = useState<SubmissionStatus | null>(null)
   const [pasteWarned, setPasteWarned] = useState(false)
   const pasteTimer = useRef<number | undefined>(undefined)
+
+  // 패널 리사이즈 (요건 22) — 좁은 화면에선 세로 스택으로 두고 리사이즈를 끈다
+  const narrow = useMediaQuery('(max-width: 900px)')
+  const rootRef = useRef<HTMLDivElement>(null)
+  const rightColRef = useRef<HTMLDivElement>(null)
+  // 문제 패널 폭 (컨테이너 대비 비율)
+  const hSplit = useSplit({
+    storageKey: 'ide.split.problem',
+    defaultRatio: 0.4,
+    min: 0.2,
+    max: 0.65,
+    axis: 'x',
+    containerRef: rootRef,
+  })
+  // IO 패널 높이 (우측 컬럼 대비 비율 — 아래쪽 기준이라 invert)
+  const vSplit = useSplit({
+    storageKey: 'ide.split.io',
+    defaultRatio: 0.3,
+    min: 0.12,
+    max: 0.6,
+    axis: 'y',
+    invert: true,
+    containerRef: rightColRef,
+  })
 
   useEffect(() => () => window.clearTimeout(pasteTimer.current), [])
 
@@ -138,8 +164,10 @@ export function IDEPage() {
 
   return (
     <div
+      ref={rootRef}
       style={{
         display: 'flex',
+        flexDirection: narrow ? 'column' : 'row',
         height: 'calc(100vh - 53px)',
         minHeight: 560,
         borderTop: `1px solid ${C.borderLight}`,
@@ -149,12 +177,14 @@ export function IDEPage() {
       {/* Left: problem panel */}
       <div
         style={{
-          width: '40%',
-          borderRight: `1px solid ${C.border}`,
+          ...(narrow
+            ? { width: '100%', height: '40%', minHeight: 220, borderBottom: `1px solid ${C.border}` }
+            : { width: `${hSplit.ratio * 100}%`, borderRight: `1px solid ${C.border}` }),
           overflow: 'auto',
           background: '#fff',
           display: 'flex',
           flexDirection: 'column',
+          flexShrink: 0,
         }}
       >
         <div
@@ -275,8 +305,27 @@ export function IDEPage() {
         </div>
       </div>
 
+      {/* 좌우 분할 핸들 */}
+      {!narrow && (
+        <div
+          {...hSplit.handleProps}
+          title="드래그로 폭 조절 · 더블클릭으로 초기화"
+          style={{
+            width: 6,
+            flexShrink: 0,
+            cursor: 'col-resize',
+            touchAction: 'none',
+            background: hSplit.dragging ? C.blue : C.bg,
+            borderRight: `1px solid ${C.border}`,
+          }}
+        />
+      )}
+
       {/* Right: editor + IO + status */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div
+        ref={rightColRef}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}
+      >
         {/* Toolbar */}
         <div
           style={{
@@ -380,14 +429,31 @@ export function IDEPage() {
           monitor={antiCheat.monitor}
         />
 
+        {/* 상하 분할 핸들 (에디터 ↕ IO) */}
+        {!narrow && (
+          <div
+            {...vSplit.handleProps}
+            title="드래그로 높이 조절 · 더블클릭으로 초기화"
+            style={{
+              height: 6,
+              flexShrink: 0,
+              cursor: 'row-resize',
+              touchAction: 'none',
+              background: vSplit.dragging ? C.blue : C.bg,
+              borderTop: `1px solid ${C.border}`,
+            }}
+          />
+        )}
+
         {/* IO panel */}
         <div
           style={{
             display: 'flex',
-            borderTop: `1px solid ${C.border}`,
             background: '#fff',
-            height: 200,
-            minHeight: 200,
+            flexShrink: 0,
+            ...(narrow
+              ? { borderTop: `1px solid ${C.border}`, height: 200, minHeight: 200 }
+              : { height: `${vSplit.ratio * 100}%`, minHeight: 120 }),
           }}
         >
           <div

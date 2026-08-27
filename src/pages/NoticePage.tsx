@@ -18,7 +18,7 @@ export function NoticePage() {
 
   return (
     <div className="container" style={{ maxWidth: 760, margin: '32px auto' }}>
-      <Link to="/" style={{ fontSize: 13, color: C.muted, textDecoration: 'none' }}>
+      <Link to="/home" style={{ fontSize: 13, color: C.muted, textDecoration: 'none' }}>
         ← 홈으로
       </Link>
 

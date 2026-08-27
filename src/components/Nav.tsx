@@ -3,7 +3,7 @@ import { C, fontStack } from '../theme'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_LINKS: { to: string; label: string; isActive: (path: string) => boolean }[] = [
-  { to: '/', label: '홈', isActive: p => p === '/' },
+  { to: '/home', label: '홈', isActive: p => p === '/home' },
   { to: '/problems', label: '문제', isActive: p => p.startsWith('/problems') },
   {
     to: '/ranking',

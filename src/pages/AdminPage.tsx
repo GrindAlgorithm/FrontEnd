@@ -38,7 +38,7 @@ export function AdminPage() {
   }, [])
 
   // 라우트 가드(백엔드도 403으로 막지만 UX상 선차단)
-  if (me && me.role !== 'ADMIN') return <Navigate to="/" replace />
+  if (me && me.role !== 'ADMIN') return <Navigate to="/home" replace />
 
   const resetForm = () => {
     setEditingId(null)
