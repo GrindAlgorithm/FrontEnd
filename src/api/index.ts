@@ -36,6 +36,9 @@ const hybridApi: ApiClient = {
   getSubmission: realApi.getSubmission,
   listSubmissions: realApi.listSubmissions,
   getRanking: realApi.getRanking,
+  // 유저 프로필/칭호 (§2.15·§2.16 — 칭호 발급 전이라 titles 는 빈 배열)
+  getUserProfile: realApi.getUserProfile,
+  updateMyTitle: realApi.updateMyTitle,
   // 부정행위 신호 배치 — 백엔드 수신·적재(§2.17) 구현 완료
   reportSolveEvents: realApi.reportSolveEvents,
   // 토론 조회/작성/상세 (요건 4 구현 완료 — 정답자 한정)
@@ -61,7 +64,7 @@ if (mode !== 'false') {
   // eslint-disable-next-line no-console
   console.info(
     mode === 'hybrid'
-      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌/문제/IDE(실행·제출)/채점현황/랭킹/무결성/토론/공지/언어목록은 백엔드(:8080), 나머지는 목'
+      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌/문제/IDE(실행·제출)/채점현황/랭킹/프로필/무결성/토론/공지/언어목록은 백엔드(:8080), 나머지는 목'
       : '[GrindAlgorithm] 목 API 모드로 실행 중 — .env의 VITE_USE_MOCK=hybrid|false 로 백엔드 연동',
   )
 }
