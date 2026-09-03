@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import type { ClipboardEvent, DragEvent, KeyboardEvent } from 'react'
 import { C, monoStack } from '../theme'
 import { highlight } from '../utils/highlight'
+import { ALLOW_EXTERNAL_PASTE } from '../config/testMode'
 import type { EditorMonitor } from '../antiCheat'
 import type { LanguageCode } from '../types/domain'
 
@@ -80,15 +81,19 @@ export function CodeEditor({
       monitor?.internalPaste(text)
       return
     }
-    e.preventDefault()
+    // 테스트 모드(staging)에서는 차단만 풀고 신호는 그대로 남긴다 — config/testMode.ts 참고.
+    // preventDefault를 하지 않으므로 브라우저가 삽입하고, 경고 문구도 띄우지 않는다.
     monitor?.pasteBlocked(text)
+    if (ALLOW_EXTERNAL_PASTE) return
+    e.preventDefault()
     onPasteBlocked?.()
   }
 
   // 붙여넣기를 막아도 드래그&드롭으로는 들어올 수 있어 같이 막는다
   const handleDrop = (e: DragEvent<HTMLTextAreaElement>) => {
-    e.preventDefault()
     monitor?.dropBlocked(e.dataTransfer.getData('text'))
+    if (ALLOW_EXTERNAL_PASTE) return
+    e.preventDefault()
     onPasteBlocked?.()
   }
 
