@@ -1,0 +1,5 @@
+# 줄바꿈 고정 — CI·서버에서 읽는 파일은 LF 로 저장한다.
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.ps1   text eol=crlf

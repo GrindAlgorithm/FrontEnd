@@ -1,0 +1,63 @@
+name: CI
+
+# 1단계 워크플로 — 빌드와 검증만 한다. 배포는 하지 않으므로 서버 접속 정보가 필요 없다.
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: 타입체크 · 빌드
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node 20 준비
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 타입체크 · 프로덕션 빌드
+        run: npm run build
+
+      # 배포 산출물이 목 데이터로 나가는 사고를 막는다.
+      # src/api/index.ts 는 VITE_USE_MOCK 이 없으면 목 API 로 떨어지는데,
+      # vite build 는 .env.development 를 읽지 않아 실수하기 쉽다.
+      - name: 실서버 모드로 빌드됐는지 확인
+        run: |
+          set -euo pipefail
+
+          if [ ! -f .env.production ]; then
+            echo "::error::.env.production 이 없습니다. 이 파일이 없으면 빌드가 목 API 로 떨어집니다."
+            exit 1
+          fi
+          if ! grep -qE '^VITE_USE_MOCK=false[[:space:]]*$' .env.production; then
+            echo "::error::.env.production 의 VITE_USE_MOCK 이 false 가 아닙니다."
+            grep -n 'VITE_USE_MOCK' .env.production || true
+            exit 1
+          fi
+
+          # 목 모드일 때만 번들에 남는 문자열. 하나라도 있으면 목이 섞인 것이다.
+          if grep -rq '목 API 모드로 실행\|하이브리드 모드' dist/assets/*.js; then
+            echo "::error::번들에 목 모드 코드가 포함되어 있습니다."
+            exit 1
+          fi
+
+          echo "실서버 모드로 빌드됨"
+          ls -lh dist/assets/
+
+      - name: 빌드 산출물 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
