@@ -2,12 +2,17 @@ name: Deploy
 
 # 2단계 워크플로 — 빌드와 검증을 통과한 커밋만 앱 서버에 배포한다.
 #
-# 처음에는 수동 실행만 켜 둔다. Actions 탭 → Deploy → Run workflow.
-# 익숙해지면 아래 push 블록의 주석을 풀어 main 병합 시 자동 배포로 바꾼다.
+# 배포 기준선은 staging 브랜치다. dev 에서 개발하고, 내보낼 준비가 되면 staging 에
+# 올린다(merge 또는 push).
+#
+#   git checkout staging && git merge dev && git push origin staging
+#
+# workflow_dispatch(수동 실행)는 기본 브랜치인 main 에 이 파일이 올라간 뒤에만
+# Actions 탭에 버튼으로 나타난다.
 on:
+  push:
+    branches: [staging]
   workflow_dispatch:
-  # push:
-  #   branches: [main]
 
 concurrency:
   group: deploy-frontend
