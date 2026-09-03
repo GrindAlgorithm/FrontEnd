@@ -1,0 +1,87 @@
+name: Deploy
+
+# 2단계 워크플로 — 빌드와 검증을 통과한 커밋만 앱 서버에 배포한다.
+#
+# 처음에는 수동 실행만 켜 둔다. Actions 탭 → Deploy → Run workflow.
+# 익숙해지면 아래 push 블록의 주석을 풀어 main 병합 시 자동 배포로 바꾼다.
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 빌드 · 배포
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node 20 준비
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 타입체크 · 프로덕션 빌드
+        run: npm run build
+
+      # 목 데이터가 섞인 산출물이 서비스로 나가지 않게 한다.
+      - name: 실서버 모드로 빌드됐는지 확인
+        run: |
+          set -euo pipefail
+          if [ ! -f .env.production ]; then
+            echo "::error::.env.production 이 없습니다. 이 파일이 없으면 빌드가 목 API 로 떨어집니다."
+            exit 1
+          fi
+          if ! grep -qE '^VITE_USE_MOCK=false[[:space:]]*$' .env.production; then
+            echo "::error::.env.production 의 VITE_USE_MOCK 이 false 가 아닙니다."
+            exit 1
+          fi
+          if grep -rq '목 API 모드로 실행\|하이브리드 모드' dist/assets/*.js; then
+            echo "::error::번들에 목 모드 코드가 포함되어 있습니다."
+            exit 1
+          fi
+          echo "실서버 모드로 빌드됨"
+
+      - name: SSH 키 준비
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          APP_HOST: ${{ secrets.APP_HOST }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEPLOY_SSH_KEY:-}" ] || [ -z "${APP_HOST:-}" ]; then
+            echo "::error::Secrets 가 없습니다. 저장소 Settings → Secrets and variables → Actions 에서"
+            echo "::error::DEPLOY_SSH_KEY(배포용 개인키)와 APP_HOST(앱 서버 주소)를 등록하세요."
+            exit 1
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$APP_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "키 준비 완료"
+
+      - name: 업로드 · 교체
+        env:
+          APP_HOST: ${{ secrets.APP_HOST }}
+        run: |
+          set -euo pipefail
+          tar -C dist -czf /tmp/grindalgo-dist.tgz .
+          ls -lh /tmp/grindalgo-dist.tgz
+
+          scp -i ~/.ssh/deploy_key -o BatchMode=yes /tmp/grindalgo-dist.tgz "deployer@$APP_HOST:/tmp/"
+
+          # 임시 디렉터리에 풀고 한 번에 교체한다 — 배포 중 반쯤 섞인 화면이 보이지 않는다.
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes "deployer@$APP_HOST" \
+            'sudo /usr/local/bin/grindalgo-deploy frontend'
+
+      - name: 키 정리
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
