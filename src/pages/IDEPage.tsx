@@ -9,6 +9,7 @@ import { Tier } from '../components/Tier'
 import { CodeEditor } from '../components/CodeEditor'
 import { LoadingView, ErrorView } from '../components/Feedback'
 import { IntegrityIndicator, useAntiCheat } from '../antiCheat'
+import { ALLOW_EXTERNAL_PASTE } from '../config/testMode'
 import { LANGUAGES, STARTER_CODE, isStarterCode } from '../constants/languages'
 import type { LanguageCode, SubmissionStatus } from '../types/domain'
 
@@ -374,6 +375,12 @@ export function IDEPage() {
           {pasteWarned && (
             <span style={{ fontSize: 11, color: C.red, fontWeight: 600 }}>
               ⚠ 외부에서 복사한 코드는 붙여넣을 수 없습니다 (이 에디터에서 복사한 코드는 가능)
+            </span>
+          )}
+          {/* 테스트 빌드에서만 나타난다. 운영 빌드에 이 문구가 보이면 플래그가 잘못 켜진 것이다. */}
+          {ALLOW_EXTERNAL_PASTE && (
+            <span style={{ fontSize: 11, color: C.amber, fontWeight: 600 }}>
+              테스트 모드 · 외부 붙여넣기 허용됨 (신호는 그대로 기록됩니다)
             </span>
           )}
           <div style={{ flex: 1 }} />
