@@ -71,7 +71,7 @@ export function HomePage() {
               <div style={{ fontSize: 11, color: C.muted, marginTop: 4, fontFamily: monoStack }}>
                 {me?.seasonScore.toLocaleString()}점 ·{' '}
                 <Link to="/ranking" style={{ color: C.accent }}>
-                  {me?.seasonRank}위
+                  {me?.seasonRank != null ? `${me.seasonRank}위` : '미배치'}
                 </Link>
               </div>
             </div>
