@@ -98,8 +98,8 @@ Spring Security OAuth2 Client 표준 경로를 그대로 사용한다:
 { "error": { "code": "DISCUSSION_LOCKED", "message": "문제를 풀어야 토론에 참여할 수 있습니다" } }
 ```
 
-> ⚠ 현 백엔드는 미인증 시 401 대신 **403**(Spring Security 기본 EntryPoint)을 반환한다.
-> 프론트는 401/403 모두 비로그인으로 처리하도록 대응해 둠 (`AuthContext`).
+> 미인증은 **401 + 에러 봉투**(`UNAUTHORIZED`)로 내려간다. 프론트는 401/403 모두 비로그인으로 처리한다 (`AuthContext`).
+> 컨트롤러 밖 오류(404·405·500 등)는 스프링 기본 본문으로 해당 상태 코드 그대로 내려간다 — 401로 위장되지 않는다.
 
 | HTTP | code (예) | 사용처 |
 |---|---|---|
@@ -217,7 +217,9 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 - `decay` — **하락 공식(A1)·트리거가 미확정(추후 개발)**. 구현 전엔 `null` 고정으로 내려도 프론트는 배너를 숨긴다
 - `todayPicks[].reasonType` — `'tier_up' | 'weak_area' | 'continue' | 'similar_level' | 'category_pick'`.
   색상 강조용(파랑/빨강). 추천 로직 자체는 Deferred — MVP는 규칙 기반/더미 허용, `reason`은 자유 문구
-- `nearbyRanking` — 내 순위 ±2 (총 5행 내외), `isMe` 플래그 필수
+- `nearbyRanking` — 내 순위 ±2 (총 5행 내외), `isMe` 플래그 필수. 비로그인·시즌 미배치면 `[]`.
+  `weeklyDelta`는 순위 이력이 없어 "현재 점수 − 최근 7일 첫 정답 점수"로 7일 전 순위를 추정한 값
+- `season.solvedCount` — 내가 맞힌 현재 시즌 문제 수(비로그인 0). `weekly` — 이번주(월요일~오늘) 기준, `streakDays`는 프로필과 같은 제출일 연속 기준
 - `season.nextProblemId` — "다음 시즌 문제 풀기" 버튼이 IDE로 직행하는 대상. 전부 클리어 시 `null`
 - `seasonActivity.days` — **과거→오늘 순서**, 시즌 시작일부터(최대 12주). `level` 0~4는 백엔드가 산정(잔디 강도)
 - `notices` — 관리자 CRUD(`/admin/notices`, ADMIN 전용)로 관리 (요건 3 구현 완료). 목록에는 body 를 내리지 않는다
@@ -345,6 +347,9 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 }
 ```
 - `solveSessionId` — 이후 `POST /runs`/`POST /submissions`에 동봉되어 "어느 열람 세션에서 나온 제출인지" 연결
+- **로그인 필수**(401). `POST /runs`·`POST /submissions`도 마찬가지 — 세션 만료 후 제출이 익명으로 기록되지 않도록
+- 실행·제출 시 서버가 세션을 검증한다: 없는 세션·다른 문제의 세션·다른 유저의 세션이면
+  **400 `INVALID_SOLVE_SESSION`** ("풀이 세션이 유효하지 않습니다. 문제를 다시 열어 주세요"). 제출 행에 `solve_session_id`가 저장된다
 - 같은 유저가 재진입하면: 새 세션 발급 + 기존 기록 유지 권장 (최초 열람 시각이 분석 기준)
 - 본문 포맷: MVP는 **plain text** (프론트가 문단 그대로 렌더). 마크다운/이미지 필요해지면 협의
 - 이 `solveSessionId`가 부정행위 신호(§2.17)의 조인 키다 — 열람 시각 + 신호 + 제출을 한 세션으로 묶는다
@@ -376,6 +381,7 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 ```
 - `status`: `'ok' | 'compile_error' | 'runtime_error' | 'time_limit'`
 - 채점 아님: 점수/기록 없음. 단 run 횟수도 솔브 세션에 로깅해두면 분석에 유용 (제안)
+- 로그인 필수(401) + 풀이 세션 검증(400 `INVALID_SOLVE_SESSION`) — §2.8
 - 남용 방지 레이트리밋 권장 (`429`)
 
 ### 2.10 `POST /submissions` — 제출 (비동기 채점 시작)
