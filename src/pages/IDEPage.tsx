@@ -242,13 +242,13 @@ export function IDEPage() {
           </div>
 
           <h3 style={{ fontSize: 13, fontWeight: 700, marginTop: 0, marginBottom: 8 }}>문제</h3>
-          <p style={{ fontSize: 13, lineHeight: 1.7, margin: '0 0 16px' }}>{body.description}</p>
+          <p style={{ fontSize: 13, lineHeight: 1.7, margin: '0 0 16px', whiteSpace: 'pre-wrap' }}>{body.description}</p>
 
           <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>입력</h3>
-          <p style={{ fontSize: 13, lineHeight: 1.7, margin: '0 0 16px' }}>{body.inputSpec}</p>
+          <p style={{ fontSize: 13, lineHeight: 1.7, margin: '0 0 16px', whiteSpace: 'pre-wrap' }}>{body.inputSpec}</p>
 
           <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>출력</h3>
-          <p style={{ fontSize: 13, lineHeight: 1.7, margin: '0 0 16px' }}>{body.outputSpec}</p>
+          <p style={{ fontSize: 13, lineHeight: 1.7, margin: '0 0 16px', whiteSpace: 'pre-wrap' }}>{body.outputSpec}</p>
 
           {body.samples.map((sample, i) => (
             <div key={i}>
