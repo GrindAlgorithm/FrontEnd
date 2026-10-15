@@ -23,14 +23,14 @@ export function Nav() {
     navigate('/login')
   }
 
-  // 관리자 탭 — ADMIN 권한일 때만 노출
-  const navLinks =
-    me?.role === 'ADMIN'
-      ? [
-          ...NAV_LINKS,
-          { to: '/admin', label: '관리자', isActive: (p: string) => p.startsWith('/admin') },
-        ]
-      : NAV_LINKS
+  // 친구 탭 — 로그인 시, 관리자 탭 — ADMIN 권한일 때만 노출
+  const navLinks = [
+    ...NAV_LINKS,
+    ...(me ? [{ to: '/friends', label: '친구', isActive: (p: string) => p.startsWith('/friends') }] : []),
+    ...(me?.role === 'ADMIN'
+      ? [{ to: '/admin', label: '관리자', isActive: (p: string) => p.startsWith('/admin') }]
+      : []),
+  ]
 
   return (
     <header style={{ borderBottom: `1px solid ${C.border}`, background: C.surface }}>

@@ -39,6 +39,7 @@
 | 7 | 시즌 `/season` | `GET /seasons/current` |
 | 8 | 유저 프로필 `/users/{handle}` | `GET /users/{handle}`, `PUT /me/title` |
 | 9 | 로그인 `/login` | `POST /auth/login`, OAuth2 리다이렉트 |
+| 10 | 친구 `/friends` (로그인 필요) | `GET /friends`, `GET /users/search?q=`, `POST /friends/requests`, `POST /friends/requests/{id}/accept`, `DELETE /friends/requests/{id}`, `DELETE /friends/{handle}` |
 
 ---
 
@@ -452,7 +453,7 @@ LanguageCode = 'java11' | 'python3' | 'cpp17' | 'nodejs'   // Judge0 매핑은 �
 ```
 - `scope=season` — 현재 시즌 점수 기준 (기본)
 - `scope=overall` — ⚠ **의미 미확정**: 영구 티어가 제거된 상태에서 "전체 랭킹"이 무엇인지(역대 누적 점수? 통산 푼 문제?) 회의 필요. 프론트는 동일 스키마로 표시만 함
-- `scope=friends` — 친구/팔로우 기준. **친구 관계 추가·관리 API는 미정**(화면 없음) — 시드/팔로우 기능 협의 필요
+- `scope=friends` — **수락된 친구 + 나** 기준(§2.18). 친구 관리 화면은 `/friends`
 - `myEntry` — 목록에 내가 없어도 항상 채워서("내 순위" 행). 비로그인 허용 시 `null`
 - MVP는 상위 N(예: 100) + `myEntry`로 충분. 페이징 도입 시 협의
 
@@ -610,6 +611,62 @@ IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 
    비정상적으로 짧은 풀이시간)와 교차 확인 후에만
 5. 남용 방지: 세션당 이벤트 수 상한 / `429` 레이트리밋 권장 (프론트 큐 상한은 200건)
 
+### 2.18 친구 (신청 → 수락) — ⚠ 계약 제안, 백엔드 미구현
+
+상호 관계. A가 신청 → B가 수락해야 친구. 랭킹 `scope=friends`(§2.13)는 수락된 친구 + 나.
+전부 **로그인 필요**(비로그인 `401`). 화면: `/friends`, 프로필 헤더 버튼.
+
+공통 객체
+```json
+// FriendUser
+{ "handle": "park_dev", "tier": { "name": "platinum", "level": "I" }, "solvedCount": 121, "lastActiveAt": "2026-10-15T09:00:00+09:00" }
+```
+- `tier` — 시즌 미배치면 `null`
+
+**`GET /friends`** — 친구 화면 통합 응답
+```json
+{
+  "friends":  [ { ...FriendUser, "since": "2026-09-05T10:00:00+09:00" } ],
+  "incoming": [ { "id": 9001, "user": { ...FriendUser /* 보낸 사람 */ }, "createdAt": "..." } ],
+  "outgoing": [ { "id": 9003, "user": { ...FriendUser /* 받는 사람 */ }, "createdAt": "..." } ]
+}
+```
+- 정렬: `friends`는 최근에 친구가 된 순, 신청은 최신순
+
+**`GET /users/search?q={handle 일부}`** — 친구 추가용 핸들 검색
+```json
+[ { ...FriendUser, "relation": "none", "requestId": null } ]
+```
+- 대소문자 무시 부분 일치, **정확히 일치하는 핸들을 맨 앞에**, 최대 10건. 빈 `q`는 `[]`
+- `relation`: `none` | `outgoing`(내가 보낸 신청 대기) | `incoming`(상대 신청 대기) | `friends` | `self`
+- `requestId`: `relation`이 `incoming`/`outgoing`일 때 해당 신청 id, 그 외 `null`
+- 프론트는 입력 300ms 디바운스로 호출
+
+**`POST /friends/requests`** `{ "handle": "kim_dev" }` → **201** `FriendRequest`(outgoing 형태)
+
+| 상황 | 응답 |
+|---|---|
+| 자기 자신 | `400 FRIEND_SELF` |
+| 없는 핸들 | `404 USER_NOT_FOUND` |
+| 이미 친구 | `409 FRIEND_ALREADY` |
+| 이미 보낸 신청 있음 | `409 FRIEND_REQUEST_EXISTS` |
+| 상대가 먼저 보낸 신청 있음 | `409 FRIEND_REQUEST_INCOMING` (자동 수락하지 않는다 — 프론트가 수락 버튼을 보여줌) |
+
+**`POST /friends/requests/{id}/accept`** → **204**. 받은 신청(내가 수신자)만. 없거나 남의 신청이면 `404 FRIEND_REQUEST_NOT_FOUND`
+
+**`DELETE /friends/requests/{id}`** → **204**. 받은 신청 **거절**과 보낸 신청 **취소** 공용(내가 발신자 또는 수신자). 그 외 `404 FRIEND_REQUEST_NOT_FOUND`
+
+**`DELETE /friends/{handle}`** → **204**. 친구 끊기(양쪽에서 해제). 친구가 아니면 `404 FRIEND_NOT_FOUND`
+
+**`GET /users/{handle}` 확장(§2.15)** — 로그인 상태일 때 두 필드 추가
+```json
+{ ..., "friendRelation": "incoming", "friendRequestId": 9001 }
+```
+- 본인 프로필은 `"self"`. 필드가 없으면 프론트는 친구 버튼을 숨긴다(현재 실서버 상태)
+
+에러 `message`는 프론트가 그대로 노출한다(예: "이미 신청을 보냈습니다").
+
+
 ---
 
 ## 3. Judge0 연동 (백엔드 내부)
@@ -686,7 +743,7 @@ IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 
 | C3 KPI | "정의 사항 개발 + 랜딩 페이지" | **비로그인 랜딩 페이지는 Deferred 목록에도 있음** — 충돌. 현재 프론트는 로그인 화면이 비로그인 진입점. 랜딩 확정 시 별도 페이지 추가 |
 | D 전역 Q&A | "일반 문제만 Q&A 구현" 문구 | 해석 모호(전역 Q&A는 Deferred이기도 함). **화면 없음** — 확정 시 신규 화면+API 설계 |
 | 랭킹 `overall` 의미 | 미확정 | §2.13 참고 |
-| 친구 관계 | 화면만 존재(랭킹 탭·내 주변) | 팔로우 추가/삭제 API 미정 — MVP는 시드 허용 |
+| 친구 관계 | 화면·목 완료, **백엔드 미구현** | 신청→수락 상호 관계로 계약 제안(§2.18). 단방향 팔로우로 바뀌면 프론트 수정 필요 |
 | 이메일 가입+인증 | 🟡 (소셜은 확정) | `POST /auth/login`만 계약됨. 가입/인증 플로우 확정 시 추가 |
 
 ---

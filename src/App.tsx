@@ -14,6 +14,7 @@ import { SeasonPage } from './pages/SeasonPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { LoginPage } from './pages/LoginPage'
 import { AdminPage } from './pages/AdminPage'
+import { FriendsPage } from './pages/FriendsPage'
 
 export default function App() {
   return (
@@ -33,9 +34,10 @@ export default function App() {
         <Route path="/season" element={<SeasonPage />} />
         <Route path="/users/:handle" element={<ProfilePage />} />
 
-        {/* 로그인 필요 — 관리자(페이지 내부 role 가드 + 백엔드 403) */}
+        {/* 로그인 필요 — 관리자(페이지 내부 role 가드 + 백엔드 403), 친구 관리 */}
         <Route element={<RequireAuth />}>
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/friends" element={<FriendsPage />} />
         </Route>
       </Route>
 

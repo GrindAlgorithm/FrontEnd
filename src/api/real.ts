@@ -42,6 +42,14 @@ export const realApi: ApiClient = {
   getUserProfile: handle => http.get(`/users/${encodeURIComponent(handle)}`),
   updateMyTitle: titleId => http.put('/me/title', { titleId }),
 
+  // ── 친구 — 계약 제안 단계(백엔드 미구현, BACKEND_INTEGRATION.md §2.18) ──
+  getFriends: () => http.get('/friends'),
+  searchUsers: query => http.get(`/users/search?q=${encodeURIComponent(query)}`),
+  sendFriendRequest: handle => http.post('/friends/requests', { handle }),
+  acceptFriendRequest: requestId => http.post(`/friends/requests/${requestId}/accept`),
+  deleteFriendRequest: requestId => http.delete(`/friends/requests/${requestId}`),
+  removeFriend: handle => http.delete(`/friends/${encodeURIComponent(handle)}`),
+
   getDiscussions: problemId =>
     http.get(`/problems/${encodeURIComponent(problemId)}/discussions`),
   getDiscussionPost: (problemId, postId) =>
