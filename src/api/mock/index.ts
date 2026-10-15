@@ -3,6 +3,8 @@ import type { ApiClient } from '../client'
 import { LANGUAGES } from '../../constants/languages'
 import type {
   DiscussionResponse,
+  FriendRelation,
+  FriendUser,
   MeResponse,
   ProblemDetail,
   SolveEventBatch,
@@ -12,11 +14,14 @@ import type {
 import {
   DECAY,
   DISCUSSION_POSTS,
+  FRIENDS,
   FRIENDS_RANKING,
+  INCOMING_REQUESTS,
   ME,
   MOCK_BODY,
   NEARBY,
   NOTICES,
+  OUTGOING_REQUESTS,
   PAST_SEASONS,
   RANKING,
   SEASONS,
@@ -27,6 +32,7 @@ import {
   SEED_SUBMISSIONS,
   TITLES,
   TODAY_PICKS,
+  UNRANKED_USERS,
   YEAR_ACTIVITY,
   findProblem,
   generateActivity,
@@ -60,6 +66,37 @@ let nextSubmissionId = 87123420
 const createdSubmissions: SubmissionSummary[] = []
 /** 부정행위 신호 배치 수신함 — 목에서는 콘솔 확인용으로만 쌓아둔다 */
 const receivedSolveEvents: SolveEventBatch[] = []
+
+// 친구 상태 — 신청/수락/끊기가 화면 간에 이어지도록 메모리에 보관
+const friends = FRIENDS.map(f => ({ ...f }))
+let incoming = INCOMING_REQUESTS.map(r => ({ ...r }))
+let outgoing = OUTGOING_REQUESTS.map(r => ({ ...r }))
+let nextFriendRequestId = 9100
+
+function relationOf(handle: string): { relation: FriendRelation; requestId: number | null } {
+  if (handle === me.handle) return { relation: 'self', requestId: null }
+  if (friends.some(f => f.handle === handle)) return { relation: 'friends', requestId: null }
+  const inc = incoming.find(r => r.user.handle === handle)
+  if (inc) return { relation: 'incoming', requestId: inc.id }
+  const out = outgoing.find(r => r.user.handle === handle)
+  if (out) return { relation: 'outgoing', requestId: out.id }
+  return { relation: 'none', requestId: null }
+}
+
+/** 검색 풀 — 랭킹·친구·신청·미배치 유저를 핸들 기준으로 합친다 */
+function allUsers(): FriendUser[] {
+  const pool = new Map<string, FriendUser>()
+  const add = (u: FriendUser) => {
+    if (!pool.has(u.handle)) pool.set(u.handle, u)
+  }
+  ;[...RANKING, ...FRIENDS_RANKING].forEach(e =>
+    add({ handle: e.handle, tier: e.tier, solvedCount: e.solvedCount, lastActiveAt: e.lastActiveAt }),
+  )
+  friends.forEach(add)
+  ;[...incoming, ...outgoing].forEach(r => add(r.user))
+  UNRANKED_USERS.forEach(add)
+  return [...pool.values()]
+}
 
 function requireAuth(): void {
   if (!loggedIn) throw new ApiError(401, 'UNAUTHORIZED', '로그인이 필요합니다')
@@ -340,6 +377,8 @@ export const mockApi: ApiClient = {
         },
         titles: TITLES,
         selectedTitleId: me.selectedTitleId,
+        friendRelation: 'self',
+        friendRequestId: null,
         activity: YEAR_ACTIVITY,
         recentSolved: [
           { problemId: '21609', displayNo: '21609', title: '상어 중학교', tier: { name: 'platinum', level: 'V' }, solvedAt: hoursAgo(2) },
@@ -356,8 +395,11 @@ export const mockApi: ApiClient = {
       }
       return profile
     }
-    // 타인 프로필 (목: 랭킹 데이터에서 유추)
-    const entry = [...RANKING, ...FRIENDS_RANKING].find(e => e.handle === handle)
+    // 타인 프로필 (목: 랭킹 데이터에서 유추, 없으면 친구 검색 풀의 미배치 유저)
+    const ranked = [...RANKING, ...FRIENDS_RANKING].find(e => e.handle === handle)
+    const pooled = allUsers().find(u => u.handle === handle)
+    const entry = ranked ?? (pooled && { ...pooled, score: 0, rank: null })
+    const rel = relationOf(handle)
     if (!entry) throw new ApiError(404, 'USER_NOT_FOUND', `사용자가 없습니다: ${handle}`)
     return {
       handle,
@@ -377,6 +419,8 @@ export const mockApi: ApiClient = {
       },
       titles: TITLES.filter(t => t.owned).slice(0, 3),
       selectedTitleId: 's1_clear',
+      friendRelation: rel.relation,
+      friendRequestId: rel.requestId,
       activity: generateActivity(52, 7, [0.55, 0.78, 0.92, 0.98], 218, 0.8),
       recentSolved: [
         { problemId: '17143', displayNo: '17143', title: '낚시왕', tier: { name: 'platinum', level: 'III' }, solvedAt: hoursAgo(4) },
@@ -393,6 +437,67 @@ export const mockApi: ApiClient = {
     await delay(120)
     requireAuth()
     me.selectedTitleId = titleId
+  },
+
+  // ── 친구 ──
+  async getFriends() {
+    await delay()
+    requireAuth()
+    return {
+      friends: friends.map(f => ({ ...f })),
+      incoming: incoming.map(r => ({ ...r })),
+      outgoing: outgoing.map(r => ({ ...r })),
+    }
+  },
+  async searchUsers(query) {
+    await delay(140)
+    requireAuth()
+    const q = query.trim().toLowerCase()
+    if (!q) return []
+    return allUsers()
+      .filter(u => u.handle.toLowerCase().includes(q))
+      .sort((a, b) => Number(b.handle.toLowerCase() === q) - Number(a.handle.toLowerCase() === q))
+      .slice(0, 10)
+      .map(u => ({ ...u, ...relationOf(u.handle) }))
+  },
+  async sendFriendRequest(handle) {
+    await delay(120)
+    requireAuth()
+    const { relation } = relationOf(handle)
+    if (relation === 'self') throw new ApiError(400, 'FRIEND_SELF', '자기 자신에게는 신청할 수 없습니다')
+    if (relation === 'friends') throw new ApiError(409, 'FRIEND_ALREADY', `이미 ${handle} 님과 친구입니다`)
+    if (relation === 'outgoing') throw new ApiError(409, 'FRIEND_REQUEST_EXISTS', '이미 신청을 보냈습니다')
+    if (relation === 'incoming')
+      throw new ApiError(409, 'FRIEND_REQUEST_INCOMING', `${handle} 님이 먼저 신청했습니다. 받은 신청에서 수락하세요`)
+    const user = allUsers().find(u => u.handle === handle)
+    if (!user) throw new ApiError(404, 'USER_NOT_FOUND', `사용자가 없습니다: ${handle}`)
+    const req = { id: nextFriendRequestId++, user: { ...user }, createdAt: new Date().toISOString() }
+    outgoing = [req, ...outgoing]
+    return { ...req }
+  },
+  async acceptFriendRequest(requestId) {
+    await delay(120)
+    requireAuth()
+    const req = incoming.find(r => r.id === requestId)
+    if (!req) throw new ApiError(404, 'FRIEND_REQUEST_NOT_FOUND', '신청이 없거나 이미 처리되었습니다')
+    incoming = incoming.filter(r => r.id !== requestId)
+    friends.unshift({ ...req.user, since: new Date().toISOString() })
+  },
+  async deleteFriendRequest(requestId) {
+    await delay(120)
+    requireAuth()
+    const before = incoming.length + outgoing.length
+    incoming = incoming.filter(r => r.id !== requestId)
+    outgoing = outgoing.filter(r => r.id !== requestId)
+    if (incoming.length + outgoing.length === before)
+      throw new ApiError(404, 'FRIEND_REQUEST_NOT_FOUND', '신청이 없거나 이미 처리되었습니다')
+  },
+  async removeFriend(handle) {
+    await delay(120)
+    requireAuth()
+    const i = friends.findIndex(f => f.handle === handle)
+    if (i < 0) throw new ApiError(404, 'FRIEND_NOT_FOUND', `${handle} 님은 친구가 아닙니다`)
+    friends.splice(i, 1)
   },
 
   // ── 토론 ──

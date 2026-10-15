@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { api } from '../api'
 import { useApi } from '../hooks/useApi'
 import { C, monoStack } from '../theme'
@@ -22,7 +22,9 @@ const SCOPE_TABS: { id: RankingScope; label: string }[] = [
 ]
 
 export function RankingPage() {
-  const [scope, setScope] = useState<RankingScope>('season')
+  // 친구 화면의 '친구 랭킹 →' 은 state 로 친구 탭을 지정해 들어온다
+  const initialScope = (useLocation().state as { scope?: RankingScope } | null)?.scope
+  const [scope, setScope] = useState<RankingScope>(initialScope ?? 'season')
   const { data, loading, error, reload } = useApi(() => api.getRanking(scope), [scope])
 
   return (
@@ -85,6 +87,24 @@ export function RankingPage() {
         <ErrorView error={error ?? new Error('데이터 없음')} onRetry={reload} />
       ) : (
         <>
+          {scope === 'friends' && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '10px 8px',
+                fontSize: 12,
+                color: C.muted,
+                borderBottom: `1px solid ${C.borderLight}`,
+              }}
+            >
+              <span>나와 친구 {Math.max(data.entries.length - 1, 0)}명의 시즌 순위</span>
+              <Link to="/friends" style={{ color: C.accent }}>
+                친구 추가·관리 →
+              </Link>
+            </div>
+          )}
           <RankingTable entries={data.entries} withHeader />
 
           {/* 내 순위 */}

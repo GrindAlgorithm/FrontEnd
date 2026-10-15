@@ -341,6 +341,45 @@ export interface RankingResponse {
   myEntry: RankingEntry | null
 }
 
+// ── 친구 ─────────────────────────────────────────────────────
+// 신청 → 수락 방식의 상호 관계. 랭킹 scope=friends 는 수락된 친구 + 나 기준.
+
+/** 나 기준 상대와의 관계 */
+export type FriendRelation =
+  | 'none' // 관계 없음 → 신청 가능
+  | 'outgoing' // 내가 보낸 신청 대기 중 → 취소 가능
+  | 'incoming' // 상대가 보낸 신청 대기 중 → 수락/거절 가능
+  | 'friends' // 친구 → 끊기 가능
+  | 'self'
+
+export interface FriendUser {
+  handle: string
+  tier: TierRank | null // 시즌 미배치 시 null
+  solvedCount: number
+  lastActiveAt: string
+}
+
+export interface Friend extends FriendUser {
+  since: string // 친구가 된 시각
+}
+
+export interface FriendRequest {
+  id: number
+  user: FriendUser // 받은 신청이면 보낸 사람, 보낸 신청이면 받는 사람
+  createdAt: string
+}
+
+export interface FriendsResponse {
+  friends: Friend[]
+  incoming: FriendRequest[]
+  outgoing: FriendRequest[]
+}
+
+export interface UserSearchItem extends FriendUser {
+  relation: FriendRelation
+  requestId: number | null // relation 이 incoming/outgoing 일 때만
+}
+
 // ── 유저 프로필 / 칭호 ───────────────────────────────────────
 
 export interface UserTitle {
@@ -393,6 +432,9 @@ export interface UserProfileResponse {
   activity: ActivityCalendar // 최근 52주
   recentSolved: RecentSolvedItem[]
   recentSubmissions: RecentSubmissionItem[]
+  /** 로그인 사용자 기준 관계 — 친구 API 연동 전 백엔드 응답엔 없을 수 있다(없으면 버튼 숨김) */
+  friendRelation?: FriendRelation
+  friendRequestId?: number | null
 }
 
 // ── 시즌 상세 ────────────────────────────────────────────────

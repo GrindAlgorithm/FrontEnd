@@ -6,6 +6,8 @@ import { C, fontStack, monoStack, submissionStatusColor, submissionStatusText, t
 import { Tier } from '../components/Tier'
 import { TitleBadge } from '../components/TitleBadge'
 import { JandiGrid } from '../components/JandiGrid'
+import { FriendAction, type FriendState } from '../components/FriendAction'
+import { useAuth } from '../context/AuthContext'
 import { DecayBanner } from '../components/DecayBanner'
 import { LoadingView, ErrorView } from '../components/Feedback'
 import { bodyRowStyle, tableStyle, td } from '../components/table'
@@ -25,6 +27,14 @@ export function ProfilePage() {
 function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
   const [selectedTitleId, setSelectedTitleId] = useState<string | null>(u.selectedTitleId)
   useEffect(() => setSelectedTitleId(u.selectedTitleId), [u.selectedTitleId, u.handle])
+
+  const { me } = useAuth()
+  const [friend, setFriend] = useState<FriendState | null>(null)
+  useEffect(
+    () =>
+      setFriend(u.friendRelation ? { relation: u.friendRelation, requestId: u.friendRequestId ?? null } : null),
+    [u.friendRelation, u.friendRequestId, u.handle],
+  )
 
   const selectedTitle = u.titles.find(t => t.id === selectedTitleId) ?? null
   const owned = u.titles.filter(t => t.owned)
@@ -76,6 +86,12 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
           >
             <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, fontFamily: monoStack }}>{u.handle}</h1>
             {selectedTitle && <TitleBadge title={selectedTitle} size="md" />}
+            {/* 친구 버튼 — 로그인 상태 + 응답에 관계가 있을 때만 (친구 API 연동 전 실서버는 필드 없음) */}
+            {me && !u.isMe && friend && (
+              <span style={{ marginLeft: 'auto' }}>
+                <FriendAction handle={u.handle} state={friend} onChange={setFriend} />
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 11, color: C.muted, fontFamily: monoStack, marginBottom: 12 }}>
             가입 {u.joinedAt.slice(0, 10)}

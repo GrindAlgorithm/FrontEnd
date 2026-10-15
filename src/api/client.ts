@@ -3,6 +3,8 @@ import type {
   DiscussionCreateRequest,
   DiscussionPostDetail,
   DiscussionResponse,
+  FriendRequest,
+  FriendsResponse,
   LanguageInfo,
   MeResponse,
   NoticeDetail,
@@ -22,6 +24,7 @@ import type {
   SubmitRequest,
   SubmitResponse,
   UserProfileResponse,
+  UserSearchItem,
 } from '../types/domain'
 
 /**
@@ -70,6 +73,16 @@ export interface ApiClient {
   // ── 프로필/칭호 ──
   getUserProfile(handle: string): Promise<UserProfileResponse>
   updateMyTitle(titleId: string | null): Promise<void>
+
+  // ── 친구 (신청 → 수락) ──
+  getFriends(): Promise<FriendsResponse>
+  /** 핸들 부분 일치 검색 — 각 결과에 나와의 관계가 붙는다 */
+  searchUsers(query: string): Promise<UserSearchItem[]>
+  sendFriendRequest(handle: string): Promise<FriendRequest>
+  acceptFriendRequest(requestId: number): Promise<void>
+  /** 받은 신청 거절 · 보낸 신청 취소 공용 */
+  deleteFriendRequest(requestId: number): Promise<void>
+  removeFriend(handle: string): Promise<void>
 
   // ── 토론 ──
   getDiscussions(problemId: string): Promise<DiscussionResponse>

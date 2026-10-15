@@ -3,6 +3,9 @@ import type {
   ActivityDay,
   DecayWarning,
   DiscussionPostDetail,
+  Friend,
+  FriendRequest,
+  FriendUser,
   MeResponse,
   NearbyRankingEntry,
   NoticeDetail,
@@ -290,6 +293,31 @@ export const FRIENDS_RANKING: RankingEntry[] = [
   { rank: 580, handle: 'algo_friend', tier: tier('platinum', 'I'), score: 988, solvedCount: 102, lastActiveAt: hoursAgo(6) },
   { rank: 1456, handle: 'study_kim', tier: tier('silver', 'III'), score: 388, solvedCount: 41, lastActiveAt: daysAgo(2) },
   { rank: 1822, handle: 'newbie_lee', tier: tier('silver', 'IV'), score: 297, solvedCount: 33, lastActiveAt: daysAgo(3) },
+]
+
+// ── 친구 ─────────────────────────────────────────────────────
+// FRIENDS_RANKING 의 친구(나 제외)와 일치시킨다. 검색 풀은 랭킹 + 아래 미배치 유저.
+
+export const FRIENDS: Friend[] = [
+  { handle: 'park_dev', tier: tier('platinum', 'I'), solvedCount: 121, lastActiveAt: hoursAgo(2), since: daysAgo(40) },
+  { handle: 'algo_friend', tier: tier('platinum', 'I'), solvedCount: 102, lastActiveAt: hoursAgo(6), since: daysAgo(21) },
+  { handle: 'study_kim', tier: tier('silver', 'III'), solvedCount: 41, lastActiveAt: daysAgo(2), since: daysAgo(9) },
+  { handle: 'newbie_lee', tier: tier('silver', 'IV'), solvedCount: 33, lastActiveAt: daysAgo(3), since: daysAgo(3) },
+]
+
+export const INCOMING_REQUESTS: FriendRequest[] = [
+  { id: 9001, user: { handle: 'cs_student', tier: tier('platinum', 'III'), solvedCount: 263, lastActiveAt: minutesAgo(2) }, createdAt: hoursAgo(3) },
+  { id: 9002, user: { handle: 'dp_beginner', tier: null, solvedCount: 4, lastActiveAt: daysAgo(1) }, createdAt: daysAgo(1) },
+]
+
+export const OUTGOING_REQUESTS: FriendRequest[] = [
+  { id: 9003, user: { handle: 'kim_dev', tier: tier('diamond', 'IV'), solvedCount: 351, lastActiveAt: minutesAgo(3) }, createdAt: daysAgo(2) },
+]
+
+/** 랭킹에 없는(시즌 미배치) 유저 — 검색 결과용 */
+export const UNRANKED_USERS: FriendUser[] = [
+  { handle: 'dp_beginner', tier: null, solvedCount: 4, lastActiveAt: daysAgo(1) },
+  { handle: 'graph_park', tier: null, solvedCount: 12, lastActiveAt: daysAgo(6) },
 ]
 
 // ── 칭호 ─────────────────────────────────────────────────────
