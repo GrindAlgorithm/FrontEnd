@@ -42,7 +42,7 @@ export const realApi: ApiClient = {
   getUserProfile: handle => http.get(`/users/${encodeURIComponent(handle)}`),
   updateMyTitle: titleId => http.put('/me/title', { titleId }),
 
-  // ── 친구 — 계약 제안 단계(백엔드 미구현, BACKEND_INTEGRATION.md §2.18) ──
+  // ── 친구 — 신청 → 수락 (BACKEND_INTEGRATION.md §2.18) ──
   getFriends: () => http.get('/friends'),
   searchUsers: query => http.get(`/users/search?q=${encodeURIComponent(query)}`),
   sendFriendRequest: handle => http.post('/friends/requests', { handle }),

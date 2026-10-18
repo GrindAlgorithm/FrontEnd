@@ -99,7 +99,10 @@ export function RankingPage() {
                 borderBottom: `1px solid ${C.borderLight}`,
               }}
             >
-              <span>나와 친구 {Math.max(data.entries.length - 1, 0)}명의 시즌 순위</span>
+              {/* 실서버는 entries 에 나를 넣지 않고 목은 넣는다 — 내 핸들을 빼고 센다 */}
+              <span>
+                친구 {data.entries.filter(e => e.handle !== data.myEntry?.handle).length}명의 시즌 순위
+              </span>
               <Link to="/friends" style={{ color: C.accent }}>
                 친구 추가·관리 →
               </Link>

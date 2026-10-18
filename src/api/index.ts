@@ -52,6 +52,13 @@ const hybridApi: ApiClient = {
   adminCreateNotice: realApi.adminCreateNotice,
   adminUpdateNotice: realApi.adminUpdateNotice,
   adminDeleteNotice: realApi.adminDeleteNotice,
+  // 친구 신청 → 수락 (§2.18 구현 완료)
+  getFriends: realApi.getFriends,
+  searchUsers: realApi.searchUsers,
+  sendFriendRequest: realApi.sendFriendRequest,
+  acceptFriendRequest: realApi.acceptFriendRequest,
+  deleteFriendRequest: realApi.deleteFriendRequest,
+  removeFriend: realApi.removeFriend,
 }
 
 export const api: ApiClient =
@@ -64,7 +71,7 @@ if (mode !== 'false') {
   // eslint-disable-next-line no-console
   console.info(
     mode === 'hybrid'
-      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌/문제/IDE(실행·제출)/채점현황/랭킹/프로필/무결성/토론/공지/언어목록은 백엔드(:8080), 나머지는 목'
+      ? '[GrindAlgorithm] 하이브리드 모드 — 대시보드/시즌/문제/IDE(실행·제출)/채점현황/랭킹/프로필/친구/무결성/토론/공지/언어목록은 백엔드(:8080), 나머지는 목'
       : '[GrindAlgorithm] 목 API 모드로 실행 중 — .env의 VITE_USE_MOCK=hybrid|false 로 백엔드 연동',
   )
 }
