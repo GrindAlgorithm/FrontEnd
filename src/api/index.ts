@@ -64,7 +64,7 @@ const hybridApi: ApiClient = {
 export const api: ApiClient =
   mode === 'false' ? realApi : mode === 'hybrid' ? hybridApi : mockApi
 
-export { ApiError } from './http'
+export { ApiError, UNAUTHORIZED_EVENT } from './http'
 export type { ApiClient } from './client'
 
 if (mode !== 'false') {

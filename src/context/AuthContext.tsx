@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { api, ApiError } from '../api'
+import { api, ApiError, UNAUTHORIZED_EVENT } from '../api'
 import type { MeResponse } from '../types/domain'
 
 interface AuthState {
@@ -18,6 +19,14 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<MeResponse | null>(null)
   const [booting, setBooting] = useState(true)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // 이벤트 핸들러에서 최신 값을 읽기 위한 ref (핸들러 재구독 없이)
+  const meRef = useRef(me)
+  meRef.current = me
+  const locationRef = useRef(location)
+  locationRef.current = location
 
   const refresh = useCallback(async () => {
     try {
@@ -36,6 +45,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh()
       .catch(() => setMe(null))
       .finally(() => setBooting(false))
+  }, [refresh])
+
+  // 세션 만료: 로그인 상태였는데 API 가 401 → 로그아웃 처리 후 로그인 페이지로 (원래 경로 보존)
+  useEffect(() => {
+    const onUnauthorized = () => {
+      if (!meRef.current) return // 원래 비로그인 — 공개 페이지의 401 은 각 화면이 처리
+      meRef.current = null
+      setMe(null)
+      const { pathname, search } = locationRef.current
+      if (pathname === '/login') return
+      navigate('/login', { replace: true, state: { from: pathname + search, expired: true } })
+    }
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
+  }, [navigate])
+
+  // 탭에 돌아왔을 때 세션 재확인 — API 호출이 없는 화면에서도 만료를 감지한다
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && meRef.current) {
+        refresh().catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [refresh])
 
   const login = useCallback(async (email: string, password: string) => {

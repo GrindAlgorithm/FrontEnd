@@ -13,7 +13,10 @@ export function LoginPage() {
   const { me, booting, login, signup } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from ?? '/home'
+  const navState = location.state as { from?: string; expired?: boolean } | null
+  const from = navState?.from ?? '/home'
+  /** 세션 만료로 튕겨 온 경우 — AuthProvider 가 state.expired 를 실어 보낸다 */
+  const expired = navState?.expired === true
 
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
@@ -181,7 +184,15 @@ export function LoginPage() {
           autoComplete={isSignup ? 'new-password' : 'current-password'}
           style={inputStyle}
         />
-        {error && <div style={{ fontSize: 12, color: C.red }}>{error}</div>}
+        {error ? (
+          <div style={{ fontSize: 12, color: C.red }}>{error}</div>
+        ) : (
+          expired && (
+            <div style={{ fontSize: 12, color: C.muted }}>
+              세션이 만료되었습니다. 다시 로그인해 주세요.
+            </div>
+          )
+        )}
         <button
           type="submit"
           disabled={pending}
