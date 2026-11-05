@@ -8,6 +8,6 @@ export function RequireAuth() {
   const location = useLocation()
 
   if (booting) return <LoadingView label="세션 확인 중…" />
-  if (!me) return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (!me) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
   return <Outlet />
 }

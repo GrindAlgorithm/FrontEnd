@@ -24,6 +24,12 @@ export class ApiError extends Error {
   }
 }
 
+/** 세션 만료 감지 이벤트 — AuthProvider 가 구독해 로그인 페이지로 보낸다 */
+export const UNAUTHORIZED_EVENT = 'grind:unauthorized'
+
+/** 로그인/가입/로그아웃 자체의 401 은 '세션 만료'가 아니라 자격 증명 실패라 제외 */
+const AUTH_ACTION_PATHS = ['/auth/login', '/auth/signup', '/auth/logout']
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(BASE + path, {
     method,
@@ -40,6 +46,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       message = data.error.message
     } catch {
       // 에러 봉투가 없는 응답 (게이트웨이 에러 등)
+    }
+    if (res.status === 401 && !AUTH_ACTION_PATHS.some(p => path.startsWith(p))) {
+      window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT, { detail: { path } }))
     }
     throw new ApiError(res.status, code, message)
   }
