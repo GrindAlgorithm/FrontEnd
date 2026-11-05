@@ -67,6 +67,7 @@ const RISK_WEIGHT: Record<SolveEventType, number> = {
   focus_lost: 0, // 자리 비움 자체는 무죄 — 복합 신호(return_bulk_insert)로만 반영
   devtools_suspected: 5,
   code_copied: 2,
+  draft_restored: 0, // 저장된 초안 복원 — 기록만 (검토 시 자필률 해석용)
 }
 
 /** 연속 발행을 억제할 유형 — 상태가 지속되는 신호들 */
@@ -114,6 +115,12 @@ export interface EditorMonitor {
   internalPaste(text: string): void
   dropBlocked(text: string): void
   copiedOut(text: string, cut: boolean): void
+  /**
+   * 에디터 명령(자동 들여쓰기·괄호 닫기·줄 이동·주석 토글·undo/redo 등)이 만든 변경 예고.
+   * 키 1번으로 여러 글자가 생기는 정상 경로라 대량 삽입으로 보지 않는다.
+   * authored=false(undo/redo)면 이미 집계된 코드의 재등장이라 어느 쪽에도 세지 않는다.
+   */
+  editorCommand(chars: number, authored: boolean): void
 }
 
 /** 공통 접두/접미를 잘라낸 변경 구간 — O(n)이라 타이핑마다 돌려도 부담 없다 */
@@ -165,6 +172,10 @@ export class CheatDetector implements EditorMonitor {
   /** 내부 복사분 붙여넣기 예고 — 곧 들어올 삽입의 상한과 예고 시각 */
   private pendingInternalChars = 0
   private pendingInternalAt = 0
+  /** 에디터 명령 예고 — 실제 삽입 글자 수, 예고 시각(0이면 없음), 자필 집계 여부 */
+  private pendingCommandChars = 0
+  private pendingCommandAt = 0
+  private pendingCommandAuthored = true
   private blurredMs = 0
   private blurCount = 0
   private riskPoints = 0
@@ -241,6 +252,16 @@ export class CheatDetector implements EditorMonitor {
       return
     }
 
+    // 에디터 명령은 바로 다음 변경 1건만 면제한다. 크기 상한은 두지 않는다 — 여러 줄 들여쓰기·주석 토글처럼
+    // 떨어진 위치를 여러 군데 고치면 diffRange 구간이 실제 삽입량보다 커지기 때문 (집계는 실제 삽입량으로)
+    if (this.pendingCommandAt > 0 && t - this.pendingCommandAt <= THRESHOLDS.KEYSTROKE_GRACE_MS) {
+      if (this.pendingCommandAuthored) this.typedChars += this.pendingCommandChars
+      this.pendingCommandAt = 0
+      this.pendingCommandChars = 0
+      this.expectedChars = 0
+      return
+    }
+
     const byKeystroke =
       t - this.lastKeyAt <= THRESHOLDS.KEYSTROKE_GRACE_MS && inserted.length <= this.expectedChars
 
@@ -295,6 +316,28 @@ export class CheatDetector implements EditorMonitor {
   dropBlocked(text: string): void {
     const chars = text.length
     this.push('drop_blocked', 'warn', `드래그&드롭 삽입 차단 (${chars}자)`, { chars })
+  }
+
+  editorCommand(chars: number, authored: boolean): void {
+    this.pendingCommandChars = chars
+    this.pendingCommandAt = this.now()
+    this.pendingCommandAuthored = authored
+  }
+
+  /**
+   * 저장된 초안 복원 — 기준선을 옮기고 기록을 남긴다.
+   * localStorage는 사용자가 직접 고칠 수 있어 우회 경로가 될 수 있으므로,
+   * 감점은 하지 않되 검토자가 '자필률이 낮은 이유'를 알 수 있게 흔적을 남긴다.
+   */
+  draftRestored(code: string, savedAt: string | null): void {
+    this.resetBaseline(code)
+    const chars = code.length
+    this.push(
+      'draft_restored',
+      'info',
+      `저장된 초안 복원 (${chars}자${savedAt ? ` · ${savedAt} 저장분` : ''})`,
+      { chars },
+    )
   }
 
   copiedOut(text: string, cut: boolean): void {
@@ -429,6 +472,7 @@ export class CheatDetector implements EditorMonitor {
   resetBaseline(code: string): void {
     this.code = code
     this.expectedChars = 0
+    this.pendingCommandAt = 0
   }
 
   private push(

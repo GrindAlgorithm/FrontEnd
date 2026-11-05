@@ -279,6 +279,7 @@ export type SolveEventType =
   | 'focus_lost' // 창/탭 이탈 (복귀 시 지속시간과 함께 발행)
   | 'devtools_suspected' // 개발자 도구 열림 의심
   | 'code_copied' // 에디터 코드 복사/잘라내기 (유출 방향)
+  | 'draft_restored' // 브라우저에 저장된 초안 복원 (기록만, 위험도 0)
 
 export type SolveEventSeverity = 'info' | 'warn' | 'critical'
 
