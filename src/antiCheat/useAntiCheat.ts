@@ -20,6 +20,8 @@ export interface AntiCheatHandle {
   monitor: EditorMonitor
   /** 언어 전환·초기화처럼 프로그램이 코드를 바꿀 때 호출 (오탐 방지) */
   resetBaseline: (code: string) => void
+  /** 저장된 초안을 에디터에 복원할 때 호출 — 기준선 이동 + 복원 기록 */
+  draftRestored: (code: string, savedAt: string | null) => void
   /** summary만 최신화 (패널 열 때) */
   refresh: () => void
   /** 제출 직전 등 즉시 전송 */
@@ -150,7 +152,11 @@ export function useAntiCheat(params: {
   }, [flush])
 
   const resetBaseline = useCallback((code: string) => detector.resetBaseline(code), [detector])
+  const draftRestored = useCallback(
+    (code: string, savedAt: string | null) => detector.draftRestored(code, savedAt),
+    [detector],
+  )
   const refresh = useCallback(() => setSummary(detector.snapshot()), [detector])
 
-  return { events, summary, monitor: detector, resetBaseline, refresh, flush }
+  return { events, summary, monitor: detector, resetBaseline, draftRestored, refresh, flush }
 }

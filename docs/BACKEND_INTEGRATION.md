@@ -586,6 +586,7 @@ IDE에서 코드를 쓰는 동안 클라이언트가 모은 신호를 배치로 
 | `focus_lost` | 창/탭 이탈 (1.5초 미만은 기록 안 함) | `durationMs` |
 | `devtools_suspected` | 개발자 도구 열림 의심 (도킹된 경우만, **오탐 있음**) | — |
 | `code_copied` | 에디터 코드 복사/잘라내기 (유출 방향) | `chars` |
+| `draft_restored` | 브라우저(localStorage)에 저장된 초안을 에디터에 복원. 위험도 0이지만 복원분은 자필/외부 어느 쪽에도 집계되지 않으므로 자필률 해석 시 참고. localStorage는 사용자가 수정 가능 | `chars` |
 
 `severity`(`info`/`warn`/`critical`)는 화면 색상용이므로 서버가 신뢰할 필요 없다.
 

@@ -1,6 +1,8 @@
+import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './components/RequireAuth'
+import { LoadingView } from './components/Feedback'
 import { HomePage } from './pages/HomePage'
 import { LandingPage } from './pages/LandingPage'
 import { ProblemsPage } from './pages/ProblemsPage'
@@ -8,13 +10,15 @@ import { ProblemDetailPage } from './pages/ProblemDetailPage'
 import { DiscussionPage } from './pages/DiscussionPage'
 import { DiscussionPostPage } from './pages/DiscussionPostPage'
 import { NoticePage } from './pages/NoticePage'
-import { IDEPage } from './pages/IDEPage'
 import { RankingPage } from './pages/RankingPage'
 import { SeasonPage } from './pages/SeasonPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { LoginPage } from './pages/LoginPage'
 import { AdminPage } from './pages/AdminPage'
 import { FriendsPage } from './pages/FriendsPage'
+
+// IDE는 CodeMirror(약 600KB)를 끌고 오므로 진입할 때만 받는다
+const IDEPage = lazy(() => import('./pages/IDEPage').then(m => ({ default: m.IDEPage })))
 
 export default function App() {
   return (
@@ -46,7 +50,14 @@ export default function App() {
         {/* 랜딩 (요건 26) — 비로그인 공개. 로그인 상태면 페이지 내부에서 /home으로 리다이렉트 */}
         <Route path="/" element={<LandingPage />} />
         <Route element={<RequireAuth />}>
-          <Route path="/problems/:problemId/solve" element={<IDEPage />} />
+          <Route
+            path="/problems/:problemId/solve"
+            element={
+              <Suspense fallback={<LoadingView label="에디터를 불러오는 중…" />}>
+                <IDEPage />
+              </Suspense>
+            }
+          />
         </Route>
       </Route>
 

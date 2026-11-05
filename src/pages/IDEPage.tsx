@@ -7,6 +7,10 @@ import { useSplit } from '../hooks/useSplit'
 import { C, fontStack, monoStack, submissionStatusText } from '../theme'
 import { Tier } from '../components/Tier'
 import { CodeEditor } from '../components/CodeEditor'
+import type { CursorInfo } from '../components/CodeEditor'
+import { useAuth } from '../context/AuthContext'
+import { clearDraft, loadDraft, saveDraft } from '../utils/ideDraft'
+import type { IdeDraft } from '../utils/ideDraft'
 import { LoadingView, ErrorView } from '../components/Feedback'
 import { IntegrityIndicator, useAntiCheat } from '../antiCheat'
 import { ALLOW_EXTERNAL_PASTE } from '../config/testMode'
@@ -15,10 +19,38 @@ import type { LanguageCode, SubmissionStatus } from '../types/domain'
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 
+/** 마지막 변경 후 이 시간이 지나면 초안을 저장한다 */
+const DRAFT_SAVE_DELAY_MS = 600
+
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+const MOD = isMac ? '⌘' : 'Ctrl'
+
+const fmtSavedAt = (iso: string) => {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const sameDay = d.toDateString() === new Date().toDateString()
+  return d.toLocaleString('ko-KR', {
+    ...(sameDay ? {} : { month: 'numeric', day: 'numeric' }),
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export function IDEPage() {
   const { problemId } = useParams<{ problemId: string }>()
+  // 문제를 옮겨 다녀도 이전 문제의 코드·탐지 상태가 섞이지 않도록 문제마다 새로 마운트한다
+  return <IDEWorkspace key={problemId} problemId={problemId!} />
+}
+
+function IDEWorkspace({ problemId }: { problemId: string }) {
+  const { me } = useAuth()
+  const draftUser = me?.handle ?? 'anon'
+  // 마지막 상태(초안) — 첫 렌더에서 한 번만 읽는다
+  const [initialDraft] = useState(() => loadDraft(draftUser, problemId))
+  const initialLang: LanguageCode =
+    initialDraft && initialDraft.lang in STARTER_CODE ? initialDraft.lang : 'java11'
   // 본문 열람 = 풀이 시작 시각 기록 (B2). 열람 시점이 서버에 남는다.
-  const open = useApi(() => api.openProblem(problemId!), [problemId])
+  const open = useApi(() => api.openProblem(problemId), [problemId])
   // 지원 언어 (요건 24) — 서버 목록이 소유자. 로딩 전/실패 시엔 로컬 상수로 동작.
   // 프론트 자산(스타터 코드·하이라이트)이 없는 신규 언어는 걸러낸다.
   const languagesApi = useApi(() => api.getLanguages(), [])
@@ -27,13 +59,97 @@ export function IDEPage() {
   // solveSessionId가 채워지기 전까지는 수집만 하고 전송하지 않는다.
   const antiCheat = useAntiCheat({
     solveSessionId: open.data?.solveSessionId ?? null,
-    problemId: problemId!,
-    initialCode: STARTER_CODE.java11,
+    problemId,
+    initialCode: initialDraft?.codes[initialLang] ?? STARTER_CODE[initialLang],
   })
 
-  const [lang, setLang] = useState<LanguageCode>('java11')
-  const [code, setCode] = useState(STARTER_CODE.java11)
-  const [input, setInput] = useState('')
+  const [lang, setLang] = useState<LanguageCode>(initialLang)
+  // 언어별 코드 — 언어를 바꿔도 각 언어에서 쓰던 코드가 남는다
+  const [codes, setCodes] = useState<Partial<Record<LanguageCode, string>>>(
+    () => initialDraft?.codes ?? {},
+  )
+  const code = codes[lang] ?? STARTER_CODE[lang]
+  const setCode = (next: string) => setCodes(prev => ({ ...prev, [lang]: next }))
+  const [input, setInput] = useState(initialDraft?.input ?? '')
+  const [cursor, setCursor] = useState<CursorInfo | null>(null)
+  const [savedAt, setSavedAt] = useState<string | null>(initialDraft?.savedAt ?? null)
+  const [confirmReset, setConfirmReset] = useState(false)
+  const resetTimer = useRef<number | undefined>(undefined)
+
+  // 초안에서 복원했지만 아직 탐지기에 '복원' 기록을 안 남긴 언어들 — 그 언어를 처음 열 때 기록한다
+  const pendingRestore = useRef(
+    new Set(
+      Object.entries(initialDraft?.codes ?? {})
+        .filter(([, c]) => c && !isStarterCode(c))
+        .map(([l]) => l as LanguageCode),
+    ),
+  )
+  useEffect(() => {
+    if (pendingRestore.current.delete(initialLang)) {
+      antiCheat.draftRestored(
+        codes[initialLang] ?? '',
+        initialDraft ? fmtSavedAt(initialDraft.savedAt) : null,
+      )
+    }
+    // 마운트 시 1회
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // 초안 자동 저장 — 스타터 그대로인 언어는 빼고, 남길 게 없으면 지운다
+  const lastSaved = useRef(
+    initialDraft
+      ? JSON.stringify({ l: initialDraft.lang, c: initialDraft.codes, i: initialDraft.input })
+      : JSON.stringify({ l: initialLang, c: {}, i: '' }),
+  )
+  const pendingDraft = useRef<IdeDraft | null>(null)
+  const flushDraft = useRef(() => {})
+  flushDraft.current = () => {
+    const d = pendingDraft.current
+    if (!d) return
+    pendingDraft.current = null
+    const sig = JSON.stringify({ l: d.lang, c: d.codes, i: d.input })
+    if (sig === lastSaved.current) return
+    lastSaved.current = sig
+    if (Object.keys(d.codes).length === 0 && !d.input.trim()) {
+      clearDraft(draftUser, problemId)
+      setSavedAt(null)
+    } else if (saveDraft(draftUser, problemId, d)) {
+      setSavedAt(d.savedAt)
+    }
+  }
+  useEffect(() => {
+    const kept: Partial<Record<LanguageCode, string>> = {}
+    for (const [l, c] of Object.entries(codes)) {
+      if (c && !isStarterCode(c)) kept[l as LanguageCode] = c
+    }
+    pendingDraft.current = { lang, codes: kept, input, savedAt: new Date().toISOString() }
+    const id = window.setTimeout(() => flushDraft.current(), DRAFT_SAVE_DELAY_MS)
+    return () => window.clearTimeout(id)
+  }, [codes, lang, input])
+  // 탭 닫기·화면 이동 직전, 저장 대기분을 바로 기록
+  useEffect(() => {
+    const onHide = () => flushDraft.current()
+    window.addEventListener('pagehide', onHide)
+    return () => {
+      window.removeEventListener('pagehide', onHide)
+      flushDraft.current()
+    }
+  }, [])
+
+  // 단축키 — Ctrl/⌘+Enter 실행, Ctrl/⌘+Shift+Enter 제출.
+  // 캡처 단계에서 가로채 에디터 기본 동작(빈 줄 삽입)보다 먼저 처리한다.
+  const actions = useRef<{ run: () => void; submit: () => void } | null>(null)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' || !(e.ctrlKey || e.metaKey) || e.altKey) return
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.shiftKey) actions.current?.submit()
+      else actions.current?.run()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [])
   const [output, setOutput] = useState('')
   const [running, setRunning] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -65,7 +181,13 @@ export function IDEPage() {
     containerRef: rightColRef,
   })
 
-  useEffect(() => () => window.clearTimeout(pasteTimer.current), [])
+  useEffect(
+    () => () => {
+      window.clearTimeout(pasteTimer.current)
+      window.clearTimeout(resetTimer.current)
+    },
+    [],
+  )
 
   if (open.loading) return <LoadingView label="문제를 여는 중… (열람 시각이 기록됩니다)" />
   if (open.error || !open.data)
@@ -74,15 +196,28 @@ export function IDEPage() {
   const { problem, body, solveSessionId } = open.data
 
   const handleLang = (next: LanguageCode) => {
+    if (next === lang) return
     setLang(next)
-    // 스타터 코드 교체는 유저 입력이 아니므로 탐지 기준선을 같이 옮긴다 (대량 삽입 오탐 방지)
-    if (isStarterCode(code)) {
-      setCode(STARTER_CODE[next])
-      antiCheat.resetBaseline(STARTER_CODE[next])
+    setConfirmReset(false)
+    // 언어 전환은 유저 입력이 아니므로 탐지 기준선을 같이 옮긴다 (대량 삽입 오탐 방지).
+    // 초안에서 복원된 코드를 처음 여는 경우엔 복원 기록을 남긴다.
+    const nextCode = codes[next] ?? STARTER_CODE[next]
+    if (pendingRestore.current.delete(next)) {
+      antiCheat.draftRestored(nextCode, savedAt ? fmtSavedAt(savedAt) : null)
+    } else {
+      antiCheat.resetBaseline(nextCode)
     }
   }
 
+  // 초기화는 한 번 더 눌러야 실행된다. 실행 후에도 에디터에서 Ctrl+Z로 되돌릴 수 있다.
   const handleReset = () => {
+    window.clearTimeout(resetTimer.current)
+    if (!confirmReset && !isStarterCode(code)) {
+      setConfirmReset(true)
+      resetTimer.current = window.setTimeout(() => setConfirmReset(false), 3000)
+      return
+    }
+    setConfirmReset(false)
     setCode(STARTER_CODE[lang])
     antiCheat.resetBaseline(STARTER_CODE[lang])
   }
@@ -93,7 +228,7 @@ export function IDEPage() {
     pasteTimer.current = window.setTimeout(() => setPasteWarned(false), 4000)
   }
 
-  const handleRun = async () => {
+  async function handleRun() {
     if (!input.trim()) {
       setOutput('⚠ 입력이 비어있습니다. "예제 입력 채우기" 또는 직접 입력하세요.')
       return
@@ -125,7 +260,16 @@ export function IDEPage() {
     }
   }
 
-  const handleSubmit = async () => {
+  actions.current = {
+    run: () => {
+      if (!running && !submitting) void handleRun()
+    },
+    submit: () => {
+      if (!running && !submitting) void handleSubmit()
+    },
+  }
+
+  async function handleSubmit() {
     setSubmitting(true)
     setVerdict(null)
     setOutput('제출 중...')
@@ -361,16 +505,17 @@ export function IDEPage() {
             onClick={handleReset}
             style={{
               background: 'transparent',
-              border: 'none',
-              padding: '4px 8px',
+              border: `1px solid ${confirmReset ? C.red : 'transparent'}`,
+              padding: '3px 8px',
               fontSize: 12,
               cursor: 'pointer',
               fontFamily: fontStack,
-              color: C.muted,
+              color: confirmReset ? C.red : C.muted,
+              fontWeight: confirmReset ? 600 : 400,
             }}
-            title="스타터 코드로 초기화"
+            title={`이 언어의 코드를 스타터 코드로 되돌립니다 (에디터에서 ${MOD}+Z로 복구 가능)`}
           >
-            ↺ 초기화
+            {confirmReset ? '한 번 더 누르면 초기화' : '↺ 초기화'}
           </button>
           {pasteWarned && (
             <span style={{ fontSize: 11, color: C.red, fontWeight: 600 }}>
@@ -395,8 +540,9 @@ export function IDEPage() {
             onOpen={antiCheat.refresh}
           />
           <button
-            onClick={handleRun}
+            onClick={() => void handleRun()}
             disabled={running || submitting}
+            title={`입력란의 값으로 실행 (${MOD}+Enter)`}
             style={{
               background: 'transparent',
               color: C.text,
@@ -411,8 +557,9 @@ export function IDEPage() {
             {running ? '실행 중...' : '▶ 실행'}
           </button>
           <button
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
             disabled={running || submitting}
+            title={`채점 제출 (${MOD}+Shift+Enter)`}
             style={{
               background: 'transparent',
               color: C.accent,
@@ -434,6 +581,7 @@ export function IDEPage() {
           onChange={setCode}
           lang={lang}
           onPasteBlocked={handlePasteBlocked}
+          onCursor={setCursor}
           monitor={antiCheat.monitor}
         />
 
@@ -570,12 +718,22 @@ export function IDEPage() {
             alignItems: 'center',
           }}
         >
-          <span>Ln {code.split('\n').length}</span>
+          <span>
+            Ln {cursor?.line ?? 1}, Col {cursor?.col ?? 1}
+            {cursor && cursor.selected > 0 ? ` (${cursor.selected}자 선택)` : ''}
+          </span>
+          <span>{cursor?.lines ?? code.split('\n').length}줄</span>
           <span>{languages.find(l => l.code === lang)?.label ?? lang}</span>
-          <span>UTF-8</span>
           <span>Spaces: 4</span>
           <div style={{ flex: 1 }} />
-          <span>크기: {new Blob([code]).size} B</span>
+          {!narrow && (
+            <span style={{ fontFamily: fontStack }}>
+              {MOD}+Enter 실행 · {MOD}+Shift+Enter 제출 · {MOD}+/ 주석
+            </span>
+          )}
+          <span style={{ fontFamily: fontStack }} title="이 브라우저에 문제별로 자동 저장됩니다">
+            {savedAt ? `자동 저장됨 ${fmtSavedAt(savedAt)}` : '자동 저장'}
+          </span>
         </div>
       </div>
     </div>
