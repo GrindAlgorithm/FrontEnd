@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { C, fontStack, monoStack } from '../theme'
 import { useAuth } from '../context/AuthContext'
+import { NotificationBell } from './NotificationBell'
 
 const NAV_LINKS: { to: string; label: string; isActive: (path: string) => boolean }[] = [
   { to: '/home', label: '홈', isActive: p => p === '/home' },
@@ -70,6 +71,7 @@ export function Nav() {
         <div style={{ display: 'flex', gap: 16, fontSize: 13, alignItems: 'center' }}>
           {me ? (
             <>
+              <NotificationBell me={me} />
               <Link
                 to={`/users/${me.handle}`}
                 style={{ color: C.accent, fontWeight: 600, fontFamily: monoStack }}
