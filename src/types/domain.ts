@@ -419,6 +419,19 @@ export interface RecentSubmissionItem {
   submittedAt: string
 }
 
+/** 현재 시즌 순위 추이 (§2.15 rankHistory) — points 는 과거→오늘, 마지막 점은 오늘 실시간 순위 */
+export interface RankHistoryPoint {
+  date: string // YYYY-MM-DD (그날 마감 기준, 마지막 점만 조회 시점)
+  rank: number
+  score: number
+}
+
+export interface RankHistory {
+  seasonId: number
+  seasonName: string
+  points: RankHistoryPoint[]
+}
+
 export interface UserProfileResponse {
   handle: string
   joinedAt: string
@@ -433,6 +446,8 @@ export interface UserProfileResponse {
   activity: ActivityCalendar // 최근 52주
   recentSolved: RecentSolvedItem[]
   recentSubmissions: RecentSubmissionItem[]
+  /** 현재 시즌 순위 추이 — 미배치면 null. 순위 이력 도입 전 백엔드 응답엔 없을 수 있다 */
+  rankHistory?: RankHistory | null
   /** 로그인 사용자 기준 관계 — 친구 API 연동 전 백엔드 응답엔 없을 수 있다(없으면 버튼 숨김) */
   friendRelation?: FriendRelation
   friendRequestId?: number | null

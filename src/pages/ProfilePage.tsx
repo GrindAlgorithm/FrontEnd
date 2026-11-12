@@ -9,6 +9,7 @@ import { JandiGrid } from '../components/JandiGrid'
 import { FriendAction, type FriendState } from '../components/FriendAction'
 import { useAuth } from '../context/AuthContext'
 import { DecayBanner } from '../components/DecayBanner'
+import { RankHistoryChart } from '../components/RankHistoryChart'
 import { LoadingView, ErrorView } from '../components/Feedback'
 import { bodyRowStyle, tableStyle, td } from '../components/table'
 import { formatRelative, toJandiWeeks } from '../utils/format'
@@ -156,6 +157,25 @@ function ProfileView({ profile: u }: { profile: UserProfileResponse }) {
           </tbody>
         </table>
       </section>
+
+      {/* 시즌 순위 추이 — 현재 시즌 배치 유저만 */}
+      {u.rankHistory && (
+        <section style={{ marginBottom: 28 }}>
+          <h2
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              margin: '0 0 10px',
+              paddingBottom: 6,
+              borderBottom: `1px solid ${C.border}`,
+            }}
+          >
+            <span style={{ color: C.accent, fontFamily: monoStack }}>{'// '}</span>
+            {u.rankHistory.seasonName} 순위 추이
+          </h2>
+          <RankHistoryChart history={u.rankHistory} />
+        </section>
+      )}
 
       {/* 칭호 */}
       <section style={{ marginBottom: 28 }}>

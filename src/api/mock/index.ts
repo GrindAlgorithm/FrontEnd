@@ -7,6 +7,7 @@ import type {
   FriendUser,
   MeResponse,
   ProblemDetail,
+  RankHistory,
   SolveEventBatch,
   SubmissionSummary,
   UserProfileResponse,
@@ -96,6 +97,24 @@ function allUsers(): FriendUser[] {
   ;[...incoming, ...outgoing].forEach(r => add(r.user))
   UNRANKED_USERS.forEach(add)
   return [...pool.values()]
+}
+
+/** 목 순위 추이 — 최근 30일, 오늘 순위·점수로 끝나도록 거꾸로 만든 고정 패턴 */
+function mockRankHistory(rankNow: number, scoreNow: number): RankHistory {
+  const days = 30
+  const points: RankHistory['points'] = []
+  let rank = rankNow
+  let score = scoreNow
+  for (let i = 0; i < days; i++) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    points.push({ date: d.toLocaleDateString('sv-SE'), rank, score })
+    // 과거로 갈수록 점수가 낮고 순위가 뒤였다 — 사흘에 한 번꼴로 계단식 변화
+    if (i % 3 === 1) score = Math.max(0, score - 35 - (i % 5) * 10)
+    if (i % 4 === 2) rank = rank + 1 + (i % 7 === 0 ? 1 : 0)
+  }
+  const season = SEASONS.find(s => s.status === 'current')!
+  return { seasonId: season.id, seasonName: season.name, points: points.reverse() }
 }
 
 function requireAuth(): void {
@@ -377,6 +396,7 @@ export const mockApi: ApiClient = {
         },
         titles: TITLES,
         selectedTitleId: me.selectedTitleId,
+        rankHistory: mockRankHistory(me.seasonRank ?? 4, me.seasonScore),
         friendRelation: 'self',
         friendRequestId: null,
         activity: YEAR_ACTIVITY,
@@ -419,6 +439,7 @@ export const mockApi: ApiClient = {
       },
       titles: TITLES.filter(t => t.owned).slice(0, 3),
       selectedTitleId: 's1_clear',
+      rankHistory: entry.rank == null ? null : mockRankHistory(entry.rank, entry.score),
       friendRelation: rel.relation,
       friendRequestId: rel.requestId,
       activity: generateActivity(52, 7, [0.55, 0.78, 0.92, 0.98], 218, 0.8),
