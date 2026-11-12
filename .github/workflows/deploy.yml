@@ -37,8 +37,11 @@ jobs:
 
       - name: 타입체크 · 프로덕션 빌드
         run: npm run build
-        # IDE 외부 붙여넣기 차단은 staging 에서도 운영과 같이 켜 둔다 (2026-11-05 결정).
-        # 손 테스트용으로 다시 풀려면 env 에 VITE_ALLOW_PASTE: 'true' 를 넣는다 — src/config/testMode.ts 참고.
+        env:
+          # staging 가입자는 전부 테스트 유저라 IDE 외부 붙여넣기 차단을 푼다 (2026-11-12 결정).
+          # 부정행위 신호는 그대로 기록되고, IDE 에 테스트 모드임이 표시된다 — src/config/testMode.ts 참고.
+          # 운영 배포 워크플로를 따로 만들 때는 이 변수를 넣지 말 것 (없으면 차단이 기본).
+          VITE_ALLOW_PASTE: 'true'
 
       # 목 데이터가 섞인 산출물이 서비스로 나가지 않게 한다.
       - name: 실서버 모드로 빌드됐는지 확인
