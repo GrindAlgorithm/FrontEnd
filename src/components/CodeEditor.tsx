@@ -27,7 +27,6 @@ import { cpp } from '@codemirror/lang-cpp'
 import { javascript } from '@codemirror/lang-javascript'
 import { tags as t } from '@lezer/highlight'
 import { C, monoStack } from '../theme'
-import { ALLOW_EXTERNAL_PASTE } from '../config/testMode'
 import type { EditorMonitor } from '../antiCheat'
 import type { LanguageCode } from '../types/domain'
 
@@ -153,7 +152,7 @@ function cursorInfo(state: EditorState): CursorInfo {
  *
  * 부정행위 방지(A3) 연결:
  * - **이 에디터에서 복사한 코드는 다시 붙여넣을 수 있다** — 외부 클립보드에서 온 붙여넣기와
- *   드롭만 차단하고 onPasteBlocked로 알린다
+ *   드롭만 차단하고 onPasteBlocked로 알린다. allowExternalPaste(관리자 테스트 계정)면 차단만 풀고 신호는 남긴다
  * - 키 입력/내용 변경을 monitor로 흘려보낸다. 자동 들여쓰기·괄호 닫기·줄 이동·주석 토글·undo처럼
  *   키 1번이 여러 글자를 만드는 에디터 명령은 editorCommand로 미리 알려 '대량 삽입' 오탐을 막는다
  * - 언어별 EditorState를 따로 보관해 언어를 오가도 각 언어의 undo 기록이 유지된다
@@ -165,6 +164,7 @@ export function CodeEditor({
   onPasteBlocked,
   onCursor,
   monitor,
+  allowExternalPaste = false,
 }: {
   code: string
   onChange: (code: string) => void
@@ -172,6 +172,8 @@ export function CodeEditor({
   onPasteBlocked?: () => void
   onCursor?: (info: CursorInfo) => void
   monitor?: EditorMonitor
+  /** 외부 붙여넣기·드롭 허용 — 관리자(테스트) 계정용. 부정행위 신호는 그대로 기록한다 */
+  allowExternalPaste?: boolean
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -180,8 +182,8 @@ export function CodeEditor({
   const languageConf = useRef(new Compartment())
 
   // 콜백은 ref로 들고 있어야 에디터를 한 번만 만들 수 있다
-  const cb = useRef({ onChange, onPasteBlocked, onCursor, monitor })
-  cb.current = { onChange, onPasteBlocked, onCursor, monitor }
+  const cb = useRef({ onChange, onPasteBlocked, onCursor, monitor, allowExternalPaste })
+  cb.current = { onChange, onPasteBlocked, onCursor, monitor, allowExternalPaste }
 
   // 이 에디터에서 복사/잘라낸 텍스트 — 붙여넣기 허용 판정의 기준.
   // 페이지 인스턴스 메모리에만 있으므로 다른 탭·다른 문제에서 복사한 코드는 허용되지 않는다.
@@ -218,9 +220,9 @@ export function CodeEditor({
           cb.current.monitor?.internalPaste(text + '\n')
           return false
         }
-        // 테스트 모드(staging)에서는 차단만 풀고 신호는 그대로 남긴다 — config/testMode.ts 참고
+        // 관리자(테스트) 계정은 차단만 풀고 신호는 그대로 남긴다
         cb.current.monitor?.pasteBlocked(text)
-        if (ALLOW_EXTERNAL_PASTE) return false
+        if (cb.current.allowExternalPaste) return false
         e.preventDefault()
         cb.current.onPasteBlocked?.()
         return true
@@ -228,7 +230,7 @@ export function CodeEditor({
       // 붙여넣기를 막아도 드래그&드롭으로는 들어올 수 있어 같이 막는다 (에디터 내부 드래그 이동 포함)
       drop(e) {
         cb.current.monitor?.dropBlocked(e.dataTransfer?.getData('text/plain') ?? '')
-        if (ALLOW_EXTERNAL_PASTE) return false
+        if (cb.current.allowExternalPaste) return false
         e.preventDefault()
         cb.current.onPasteBlocked?.()
         return true
