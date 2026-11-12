@@ -14,6 +14,15 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
     />
+    <style>
+      /* 코드 표시엔 합자를 끈다 — JetBrains Mono 가 <= != -> 를 ≤ ≠ → 한 글자로 그려 원문과 달라 보인다.
+         IDE 에디터(CodeMirror)는 CodeEditor 테마에서 같은 설정을 한다. */
+      pre,
+      code {
+        font-variant-ligatures: none;
+        font-feature-settings: 'liga' 0, 'calt' 0;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

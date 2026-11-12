@@ -84,7 +84,13 @@ const editorTheme = EditorView.theme(
       backgroundColor: C.bg,
     },
     '&.cm-focused': { outline: 'none' },
-    '.cm-scroller': { fontFamily: monoStack, lineHeight: '20px' },
+    // 합자 끔 — JetBrains Mono 는 <= != -> 를 ≤ ≠ → 한 글리프로 그려, 입력한 글자가 사라진 것처럼 보인다
+    '.cm-scroller': {
+      fontFamily: monoStack,
+      lineHeight: '20px',
+      fontVariantLigatures: 'none',
+      fontFeatureSettings: '"liga" 0, "calt" 0',
+    },
     '.cm-content': { padding: '12px 0', caretColor: C.text },
     '.cm-line': { padding: '0 12px' },
     '.cm-cursor, .cm-dropCursor': { borderLeftColor: C.text, borderLeftWidth: '2px' },
